@@ -22,6 +22,7 @@
     "@tigo/logger": "^1.0.1",
     "@tigo/postgres-connector": "^1.1.0",
     "@tigo/redis-connector": "^1.0.35",
+    "axios": "^1.18.1",
     "body-parser": "^2.2.0",
     "dotenv": "^17.2.3",
     "express-prom-bundle": "^8.0.0",
