@@ -12,18 +12,23 @@ vi.mock('../../../src/controllers/example.controller.js', () => ({
   createExampleController: vi.fn(),
   getExampleController: vi.fn()
 }));
+vi.mock('../../../src/controllers/geo.controller.js', () => ({
+  geocodeController: vi.fn()
+}));
 vi.mock('../../../src/middleware/validate.middleware.js', () => ({
   validateRequestMiddleware: {
     createExample: vi.fn(() => 'createValidator'),
-    getExample: vi.fn(() => 'getValidator')
+    getExample: vi.fn(() => 'getValidator'),
+    geocode: vi.fn(() => 'geocodeValidator')
   }
 }));
 
 describe('router.routes.js', () => {
-  it('should register the POST and GET routes of the example resource', async () => {
+  it('should register the POST and GET routes of the example resource and geocode route', async () => {
     const { default: router } = await import('../../../src/routes/router.routes.js');
 
     expect(router.post).toHaveBeenCalledWith('/examples', expect.anything(), expect.anything());
     expect(router.get).toHaveBeenCalledWith('/examples/:id', expect.anything(), expect.anything());
+    expect(router.post).toHaveBeenCalledWith('/geo/geocode', expect.anything(), expect.anything());
   });
 });

@@ -6,6 +6,11 @@ vi.mock('../../../src/repositories/example.repository.js', () => ({
   selectExampleById: vi.fn()
 }));
 
+// Mock de kafka-connector
+vi.mock('@tigo/kafka-connector', () => ({
+  publish: vi.fn().mockResolvedValue(true)
+}));
+
 import { insertExample } from '../../../src/repositories/example.repository.js';
 import { createExampleService } from '../../../src/services/example.services.js';
 
