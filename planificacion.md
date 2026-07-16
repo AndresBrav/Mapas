@@ -43,8 +43,7 @@ src/
 │   └── geo.service.js
 ├── controllers/        # Controladores que manejan HTTP requests
 │   └── geo.controller.js
-├── middleware/         # Middlewares (autenticación, validación Zod)
-│   ├── auth.middleware.js
+├── middleware/         # Middlewares (validación Zod)
 │   └── validate.middleware.js
 ├── routes/             # Enrutador de Express
 │   └── router.routes.js
@@ -225,31 +224,9 @@ export const validateRequest = (schema) => (req, res, next) => {
 
 ---
 
-## 🛡️ Fase 6: Middleware de Autenticación y Rate Limiting
+## 🛡️ Fase 6: Rate Limiting y Resiliencia
 
-### `src/middleware/auth.middleware.js`
-```javascript
-export const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized: Token is missing or invalid."
-    });
-  }
-  
-  const token = authHeader.split(' ')[1];
-  // Simulación o verificación JWT en producción
-  if (token !== process.env.AUTH_TOKEN) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized: Invalid token."
-    });
-  }
-
-  next();
-};
-```
+Implementar un rate limiter en Express para controlar el flujo hacia el proveedor de mapas y cumplir los requisitos de protección del servicio externo.
 
 ---
 

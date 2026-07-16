@@ -9,37 +9,20 @@ Este documento divide la implementación del microservicio de **Geolocalización
 ```mermaid
 kanban
   Todo
-    HU-1: Middleware de Autenticación
-    HU-2: Geocodificación de Direcciones (Endpoint & Zod)
-    HU-3: Caché con Patrón Cache-Aside (Redis)
-    HU-4: Cálculo de Rutas Terrestres (Endpoint & Zod)
-    HU-5: Cálculo de Distancia y Tiempo (Endpoint & Zod)
-    HU-6: Resiliencia y Rate Limiting
-    HU-7: Pruebas Unitarias (Cobertura >= 85%)
-    HU-8: Carga K6 y Seguridad (Trivy/CI/CD)
+    HU-1: Geocodificación de Direcciones (Endpoint & Zod)
+    HU-2: Caché con Patrón Cache-Aside (Redis)
+    HU-3: Cálculo de Rutas Terrestres (Endpoint & Zod)
+    HU-4: Cálculo de Distancia y Tiempo (Endpoint & Zod)
+    HU-5: Resiliencia y Rate Limiting
+    HU-6: Pruebas Unitarias (Cobertura >= 85%)
+    HU-7: Carga K6 y Seguridad (Trivy/CI/CD)
 ```
 
 ---
 
 ## 📑 Detalle de Historias de Usuario
 
-### HU-1: Middleware de Autenticación de la API
-**Como** consumidor del microservicio (Sistema de Gestión de Envíos),  
-**Quiero** que todas las peticiones a los endpoints geográficos requieran un token de autorización en el header HTTP,  
-**Para** garantizar que sólo los sistemas autorizados puedan consultar la información geográfica y de rutas.
-
-*   **Criterios de Aceptación:**
-    *   **Caso Exitoso:** Si la petición incluye un header `Authorization: Bearer <token_valido>`, la petición es procesada correctamente.
-    *   **Caso Sin Token:** Si el header `Authorization` está ausente o no tiene el formato `Bearer`, la API responde de inmediato con código `401 Unauthorized` y un mensaje claro: `{"success": false, "message": "Unauthorized: Token is missing or invalid."}`.
-    *   **Caso Token Inválido:** Si el token enviado no coincide con el token configurado, la API responde con `401 Unauthorized`.
-*   **Tareas Técnicas:**
-    *   Crear `src/middleware/auth.middleware.js`.
-    *   Configurar la variable de entorno `AUTH_TOKEN` en `.env`.
-    *   Implementar test unitarios para validar la interceptación en rutas protegidas.
-
----
-
-### HU-2: Geocodificación de Direcciones (Endpoint `/geo/geocode`)
+### HU-1: Geocodificación de Direcciones (Endpoint `/geo/geocode`)
 **Como** despachador de envíos,  
 **Quiero** enviar una dirección en texto plano y obtener sus coordenadas exactas (latitud y longitud),  
 **Para** poder posicionarla correctamente en el mapa para su posterior ruteo.
@@ -50,11 +33,11 @@ kanban
 *   **Tareas Técnicas:**
     *   Definir el esquema Zod `geocodeSchema` en `src/schemas/geo.schema.js`.
     *   Crear el modelo de dominio `Punto.js` (validando rangos de latitud y longitud) y `Direccion.js` (validando dirección no vacía).
-    *   Implementar `geo.controller.js` y asociar la ruta `/geo/geocode` con el esquema y el middleware de autenticación.
+    *   Implementar `geo.controller.js` y asociar la ruta `/geo/geocode` con el esquema de validación.
 
 ---
 
-### HU-3: Caché con Patrón Cache-Aside (Redis)
+### HU-2: Caché con Patrón Cache-Aside (Redis)
 **Como** administrador de la plataforma,  
 **Quiero** que los resultados de geocodificación se almacenen en una caché temporal (Redis) usando un TTL configurable,  
 **Para** evitar realizar llamadas repetitivas e innecesarias al proveedor de mapas externo, reduciendo costos y tiempos de respuesta.
@@ -70,7 +53,7 @@ kanban
 
 ---
 
-### HU-4: Cálculo de Rutas Terrestres (Endpoint `/geo/route`)
+### HU-3: Cálculo de Rutas Terrestres (Endpoint `/geo/route`)
 **Como** conductor del camión de entregas,  
 **Quiero** enviar un punto de origen y un punto de destino mediante coordenadas geográficas,  
 **Para** obtener el listado detallado de puntos geográficos (path), la distancia total en kilómetros y la duración estimada.
@@ -85,7 +68,7 @@ kanban
 
 ---
 
-### HU-5: Cálculo de Distancia y Tiempo de Viaje (Endpoint `/geo/distance`)
+### HU-4: Cálculo de Distancia y Tiempo de Viaje (Endpoint `/geo/distance`)
 **Como** planificador de rutas,  
 **Quiero** calcular la distancia y la duración estimada de viaje entre dos coordenadas sin recibir la lista completa de puntos geográficos del camino,  
 **Para** optimizar el consumo de ancho de banda y agilizar los cálculos de tiempos de entrega masivos.
@@ -98,7 +81,7 @@ kanban
 
 ---
 
-### HU-6: Tolerancia a Fallos y Limitación de Tasa (Rate Limiting)
+### HU-5: Tolerancia a Fallos y Limitación de Tasa (Rate Limiting)
 **Como** administrador de la plataforma,  
 **Quiero** limitar la cantidad de peticiones concurrentes y reintentar automáticamente las consultas al proveedor de mapas ante caídas transitorias,  
 **Para** evitar la saturación de nuestra clave de API externa y garantizar la alta disponibilidad del sistema.
@@ -112,7 +95,7 @@ kanban
 
 ---
 
-### HU-7: Calidad y Pruebas Unitarias (Cobertura >= 85%)
+### HU-6: Calidad y Pruebas Unitarias (Cobertura >= 85%)
 **Como** desarrollador del proyecto,  
 **Quiero** disponer de una suite completa de pruebas automatizadas con cobertura total del negocio,  
 **Para** garantizar la estabilidad de los flujos principales y cumplir con las métricas de calidad obligatorias del bootcamp.
@@ -125,7 +108,7 @@ kanban
 
 ---
 
-### HU-8: Pruebas de Carga K6 y Seguridad (Despliegue CI/CD)
+### HU-7: Pruebas de Carga K6 y Seguridad (Despliegue CI/CD)
 **Como** oficial de seguridad y QA,  
 **Quiero** automatizar la ejecución de análisis estático (SAST), escaneo de contenedores (Trivy) y pruebas de carga (K6) dentro del pipeline de Jenkins,  
 **Para** certificar que el microservicio es seguro y responde en menos de 500 ms en el percentil 95 (p95).
