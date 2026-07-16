@@ -1,89 +1,116 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock de la libreria de Redis del bootcamp
+// Mock de Redis
 vi.mock('@tigo/redis-connector', () => ({
-  getValue: vi.fn(),
-  setValue: vi.fn(),
-  initializeRedis: vi.fn()
+    getValue: vi.fn(),
+    setValue: vi.fn(),
+    initializeRedis: vi.fn(),
 }));
 
+// Mock de Axios: simulamos las respuestas HTTP sin hacer peticiones reales
+vi.mock('axios', () => ({
+    default: {
+        get: vi.fn(),
+    },
+}));
+
+import axios from 'axios';
 import { getValue, setValue } from '@tigo/redis-connector';
 import { geoService } from '../../../src/services/geo.service.js';
 
-describe('GeoService - Cache-Aside Integration', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+// Respuesta simulada de Nominatim para una direccion conocida
+const NOMINATIM_RESPONSE_OK = [
+    { lat: '-17.39345', lon: '-66.15678', display_name: 'Av. America, Cochabamba, Bolivia' },
+];
 
-  it('deberia resolver desde cache si hay un acierto (Cache Hit) sin guardar nada nuevo', async () => {
-    const cachedCoords = { latitude: -17.39345, longitude: -66.15678 };
-    getValue.mockResolvedValue(JSON.stringify(cachedCoords));
+describe('GeoService - Nominatim + Cache-Aside', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
 
-    const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
+    // -----------------------------------------------------------------------
+    // CACHE HIT: Redis tiene el dato, NO se llama a Nominatim
+    // -----------------------------------------------------------------------
+    it('deberia resolver desde cache (Cache Hit) sin llamar a Nominatim', async () => {
+        const cachedCoords = { latitude: -17.39345, longitude: -66.15678 };
+        getValue.mockResolvedValue(JSON.stringify(cachedCoords));
 
-    expect(getValue).toHaveBeenCalledWith('geo:geocode:Av. América 123, Cochabamba, Bolivia');
-    expect(setValue).not.toHaveBeenCalled();
-    expect(result.address).toBe('Av. América 123, Cochabamba, Bolivia');
-    expect(result.coordenadas.latitude).toBe(-17.39345);
-    expect(result.coordenadas.longitude).toBe(-66.15678);
-  });
+        const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
 
-  it('deberia consultar y guardar en cache si hay un fallo de cache (Cache Miss)', async () => {
-    getValue.mockResolvedValue(null);
-    setValue.mockResolvedValue(undefined);
+        expect(getValue).toHaveBeenCalledWith('geo:geocode:Av. América 123, Cochabamba, Bolivia');
+        expect(axios.get).not.toHaveBeenCalled(); // Nominatim NO fue consultado
+        expect(setValue).not.toHaveBeenCalled();  // No se guardo nada nuevo
+        expect(result.address).toBe('Av. América 123, Cochabamba, Bolivia');
+        expect(result.coordenadas.latitude).toBe(-17.39345);
+        expect(result.coordenadas.longitude).toBe(-66.15678);
+    });
 
-    const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
+    // -----------------------------------------------------------------------
+    // CACHE MISS: Redis no tiene el dato, se consulta Nominatim y se guarda
+    // -----------------------------------------------------------------------
+    it('deberia consultar Nominatim y guardar en cache si hay Cache Miss', async () => {
+        getValue.mockResolvedValue(null);
+        setValue.mockResolvedValue(undefined);
+        axios.get.mockResolvedValue({ data: NOMINATIM_RESPONSE_OK });
 
-    expect(getValue).toHaveBeenCalledWith('geo:geocode:Av. América 123, Cochabamba, Bolivia');
-    expect(setValue).toHaveBeenCalledWith(
-      'geo:geocode:Av. América 123, Cochabamba, Bolivia',
-      JSON.stringify({ latitude: -17.39345, longitude: -66.15678 }),
-      86400
-    );
-    expect(result.address).toBe('Av. América 123, Cochabamba, Bolivia');
-    expect(result.coordenadas.latitude).toBe(-17.39345);
-    expect(result.coordenadas.longitude).toBe(-66.15678);
-  });
+        const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
 
-  it('deberia continuar el flujo de geocodificacion si Redis falla al leer (Resiliencia en Lectura)', async () => {
-    getValue.mockRejectedValue(new Error('Connection timeout'));
-    setValue.mockResolvedValue(undefined);
+        expect(getValue).toHaveBeenCalled();
+        expect(axios.get).toHaveBeenCalledOnce(); // Nominatim SI fue consultado
+        expect(setValue).toHaveBeenCalledWith(
+            'geo:geocode:Av. América 123, Cochabamba, Bolivia',
+            JSON.stringify({ latitude: -17.39345, longitude: -66.15678 }),
+            86400
+        );
+        expect(result.coordenadas.latitude).toBe(-17.39345);
+        expect(result.coordenadas.longitude).toBe(-66.15678);
+    });
 
-    const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
+    // -----------------------------------------------------------------------
+    // NOMINATIM SIN RESULTADOS: La direccion no existe en el mapa
+    // -----------------------------------------------------------------------
+    it('deberia lanzar error 404 si Nominatim no encuentra la direccion', async () => {
+        getValue.mockResolvedValue(null);
+        axios.get.mockResolvedValue({ data: [] }); // Nominatim retorna array vacio
 
-    expect(getValue).toHaveBeenCalled();
-    // Debe continuar al cache miss y guardar en cache
-    expect(setValue).toHaveBeenCalled();
-    expect(result.address).toBe('Av. América 123, Cochabamba, Bolivia');
-    expect(result.coordenadas.latitude).toBe(-17.39345);
-  });
+        await expect(
+            geoService.geocodificar('Direccion Completamente Inexistente XYZ 999')
+        ).rejects.toThrow('Address not found');
+    });
 
-  it('deberia retornar el resultado aun si Redis falla al escribir (Resiliencia en Escritura)', async () => {
-    getValue.mockResolvedValue(null);
-    setValue.mockRejectedValue(new Error('Write command failed'));
+    // -----------------------------------------------------------------------
+    // RESILIENCIA REDIS LECTURA: Redis falla al leer, continua con Nominatim
+    // -----------------------------------------------------------------------
+    it('deberia continuar con Nominatim si Redis falla al leer (Resiliencia)', async () => {
+        getValue.mockRejectedValue(new Error('Connection timeout'));
+        setValue.mockResolvedValue(undefined);
+        axios.get.mockResolvedValue({ data: NOMINATIM_RESPONSE_OK });
 
-    const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
+        const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
 
-    expect(getValue).toHaveBeenCalled();
-    expect(setValue).toHaveBeenCalled();
-    expect(result.address).toBe('Av. América 123, Cochabamba, Bolivia');
-    expect(result.coordenadas.latitude).toBe(-17.39345);
-  });
+        expect(getValue).toHaveBeenCalled();
+        expect(axios.get).toHaveBeenCalledOnce(); // Continuo y llamo a Nominatim
+        expect(result.coordenadas.latitude).toBe(-17.39345);
+    });
 
-  it('deberia geocodificar una direccion generica deterministicamente si no existe en MOCK_ADDRESSES', async () => {
-    getValue.mockResolvedValue(null);
-    setValue.mockResolvedValue(undefined);
+    // -----------------------------------------------------------------------
+    // RESILIENCIA REDIS ESCRITURA: Redis falla al escribir, retorna igual
+    // -----------------------------------------------------------------------
+    it('deberia retornar resultado aunque Redis falle al escribir (Resiliencia)', async () => {
+        getValue.mockResolvedValue(null);
+        setValue.mockRejectedValue(new Error('Write command failed'));
+        axios.get.mockResolvedValue({ data: NOMINATIM_RESPONSE_OK });
 
-    const result = await geoService.geocodificar('Direccion Generica Inexistente');
+        const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
 
-    expect(getValue).toHaveBeenCalled();
-    expect(setValue).toHaveBeenCalled();
-    expect(result.address).toBe('Direccion Generica Inexistente');
-    expect(result.coordenadas.latitude).toBeLessThan(0);
-    expect(result.coordenadas.longitude).toBeLessThan(0);
-  });
+        expect(setValue).toHaveBeenCalled(); // Intento guardar
+        expect(result.coordenadas.latitude).toBe(-17.39345); // Retorno igual
+    });
 
-  it('deberia lanzar error si se intenta geocodificar una direccion vacia', async () => {
-    await expect(geoService.geocodificar('')).rejects.toThrowError("Address is required.");
-  });
+    // -----------------------------------------------------------------------
+    // VALIDACION: Direccion vacia lanza error de dominio
+    // -----------------------------------------------------------------------
+    it('deberia lanzar error si la direccion es vacia', async () => {
+        await expect(geoService.geocodificar('')).rejects.toThrowError('Address is required.');
+    });
 });

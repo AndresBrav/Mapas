@@ -6,5 +6,8 @@
  */
 export default {
     API_BASE_PATH: process.env.API_BASE_PATH,
-    GEO_CACHE_TTL: parseInt(process.env.GEO_CACHE_TTL || "86400", 10), //transformamos a entero
+    GEO_CACHE_TTL: parseInt(process.env.GEO_CACHE_TTL || "86400", 10),
+    NOMINATIM_BASE_URL:
+        process.env.NOMINATIM_BASE_URL ||
+        "https://nominatim.openstreetmap.org/search",
 };
