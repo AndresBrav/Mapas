@@ -5,5 +5,6 @@
  * y nunca leer process.env directamente.
  */
 export default {
-  API_BASE_PATH: process.env.API_BASE_PATH
+    API_BASE_PATH: process.env.API_BASE_PATH,
+    GEO_CACHE_TTL: parseInt(process.env.GEO_CACHE_TTL || "86400", 10), //transformamos a entero
 };
