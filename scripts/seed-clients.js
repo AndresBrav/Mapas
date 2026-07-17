@@ -1,9 +1,31 @@
-import 'dotenv/config';
-import { executeQuery } from '@tigo/postgres-connector';
+import "dotenv/config";
+import { executeQuery, initializeDB } from "@tigo/postgres-connector";
+
+const createTableIfNotExists = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS clients (
+        client_id       VARCHAR(100) PRIMARY KEY,
+        client_secret   VARCHAR(255) NOT NULL,
+        name            VARCHAR(200),
+        active          BOOLEAN DEFAULT TRUE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+    await executeQuery(query);
+    console.log('Tabla "clients" verificada/creada.');
+};
 
 const clients = [
-    { clientId: 'geo-app-prod', clientSecret: 'sk-prod-abc123def', name: 'Geo App Producción' },
-    { clientId: 'geo-app-staging', clientSecret: 'sk-staging-xyz789ghi', name: 'Geo App Staging' },
+    {
+        clientId: "geo-app-prod",
+        clientSecret: "sk-prod-abc123def",
+        name: "Geo App Producción",
+    },
+    {
+        clientId: "geo-app-staging",
+        clientSecret: "sk-staging-xyz789ghi",
+        name: "Geo App Staging",
+    },
 ];
 
 const upsertClient = async ({ clientId, clientSecret, name }) => {
@@ -18,12 +40,14 @@ const upsertClient = async ({ clientId, clientSecret, name }) => {
 };
 
 try {
+    await initializeDB("default");
+    await createTableIfNotExists();
     for (const client of clients) {
         await upsertClient(client);
     }
-    console.log('Seed completado exitosamente.');
+    console.log("Seed completado exitosamente.");
     process.exit(0);
 } catch (error) {
-    console.error('Error ejecutando seed:', error.message);
+    console.error("Error ejecutando seed:", error.message);
     process.exit(1);
 }
