@@ -28,4 +28,21 @@ describe('app.js', () => {
     expect(ultimateExpress).toHaveBeenCalled();
     expect(mockApp.use).toHaveBeenCalledWith(config.API_BASE_PATH, 'routerRoutes');
   });
+
+  it('should set Cache-Control and Pragma headers via middleware', () => {
+    const useCalls = mockApp.use.mock.calls;
+    const cacheMiddleware = useCalls.find(call => typeof call[0] === 'function');
+
+    expect(cacheMiddleware).toBeDefined();
+
+    const req = {};
+    const res = { setHeader: vi.fn() };
+    const next = vi.fn();
+
+    cacheMiddleware[0](req, res, next);
+
+    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
+    expect(res.setHeader).toHaveBeenCalledWith('Pragma', 'no-cache');
+    expect(next).toHaveBeenCalled();
+  });
 });
