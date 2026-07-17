@@ -1,27 +1,29 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from "vitest";
 
 // Mock del repositorio
-vi.mock('../../../src/repositories/example.repository.js', () => ({
-  insertExample: vi.fn(),
-  selectExampleById: vi.fn()
+vi.mock("../../../src/repositories/example.repository.js", () => ({
+    insertExample: vi.fn(),
+    selectExampleById: vi.fn(),
 }));
 
 // Mock de kafka-connector
-vi.mock('@tigo/kafka-connector', () => ({
-  publish: vi.fn().mockResolvedValue(true)
+vi.mock("@tigo/kafka-connector", () => ({
+    publish: vi.fn().mockResolvedValue(true),
 }));
 
-import { insertExample } from '../../../src/repositories/example.repository.js';
-import { createExampleService } from '../../../src/services/example.services.js';
+import { insertExample } from "../../../src/repositories/example.repository.js";
+import { publish } from "@tigo/kafka-connector";
+import { createExampleService } from "../../../src/services/example.services.js";
 
-describe('example.services.js', () => {
-  it('createExampleService should delegate to insertExample and return the row', async () => {
-    const created = { id: 1, name: 'item' };
-    insertExample.mockResolvedValue(created);
+describe("example.services.js", () => {
+    it("createExampleService should delegate to insertExample and return the row", async () => {
+        const created = { id: 1, name: "item" };
+        publish.mockResolvedValue();
+        insertExample.mockResolvedValue(created);
 
-    const result = await createExampleService({ name: 'item' });
+        const result = await createExampleService({ name: "item" });
 
-    expect(insertExample).toHaveBeenCalledWith({ name: 'item' });
-    expect(result).toEqual(created);
-  });
+        expect(insertExample).toHaveBeenCalledWith({ name: "item" });
+        expect(result).toEqual(created);
+    });
 });

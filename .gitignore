@@ -9,5 +9,5 @@ DockerfilePROD
 
 JenkinsfileBAK
 deployment-bak.yaml
-
+/node_modules.*
 .env
