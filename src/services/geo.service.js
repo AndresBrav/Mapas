@@ -3,6 +3,7 @@ import { logger } from "@tigo/logger";
 import { getValue, setValue } from "@tigo/redis-connector";
 import { Direccion } from "../domain/Direccion.js";
 import { Punto } from "../domain/Punto.js";
+import { Ruta } from "../domain/Ruta.js";
 import config from "../utils/config.js";
 
 export class GeoService {
@@ -88,6 +89,43 @@ export class GeoService {
 
         // Retornamos la direccion del dominio enriquecida con sus coordenadas reales
         return new Direccion(address, punto);
+    }
+
+    async calcularRuta(originLat, originLng, destLat, destLng) {
+        logger.info({ "GeoService.calcularRuta": { originLat, originLng, destLat, destLng } });
+
+        // Validacion de dominio
+        const origin = new Punto(originLat, originLng);
+        const destination = new Punto(destLat, destLng);
+
+        const url = `${config.OSRM_BASE_URL}/${originLng},${originLat};${destLng},${destLat}?overview=full&geometries=geojson`;
+
+        const response = await axios.get(url, {
+            headers: {
+                "User-Agent": "TigoGeolocalizacionBootcamp/1.0",
+            },
+            timeout: 5000,
+        });
+
+        const data = response.data;
+
+        if (!data || data.code !== "Ok" || !data.routes || data.routes.length === 0) {
+            const error = new Error(
+                `Route not found between (${originLat},${originLng}) and (${destLat},${destLng})`,
+            );
+            error.statusCode = 404;
+            logger.warn({ "GeoService.calcularRuta": { notFound: true } });
+            throw error;
+        }
+
+        const route = data.routes[0];
+        const distanceKm = Number.parseFloat((route.distance / 1000).toFixed(2));
+        const durationMin = Math.ceil(route.duration / 60);
+        const coords = route.geometry.coordinates.map(
+            ([lng, lat]) => new Punto(lat, lng),
+        );
+
+        return new Ruta({ origin, destination, distance: distanceKm, duration: durationMin, path: coords });
     }
 }
 

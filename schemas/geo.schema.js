@@ -5,6 +5,11 @@ const headers = {
     xclientid: z.string().min(1).max(350),
 };
 
+const puntoSchema = z.object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+});
+
 // Validacion para POST /api/v1/geo/geocode
 export const geocodeSchema = z
     .object({
@@ -16,4 +21,13 @@ export const geocodeSchema = z
             .min(1, "Address is required."),
         ...headers,
     })
-    .strict(); // impide que se envíen propiedades adicionales no definidas en el esquema
+    .strict();
+
+// Validacion para POST /api/v1/geo/route
+export const routeSchema = z
+    .object({
+        origin: puntoSchema,
+        destination: puntoSchema,
+        ...headers,
+    })
+    .strict();

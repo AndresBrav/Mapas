@@ -114,3 +114,61 @@ describe('GeoService - Nominatim + Cache-Aside', () => {
         await expect(geoService.geocodificar('')).rejects.toThrowError('Address is required.');
     });
 });
+
+// -----------------------------------------------------------------------
+// RUTAS: Pruebas para calcularRuta con OSRM
+// -----------------------------------------------------------------------
+const OSRM_RESPONSE_OK = {
+    code: 'Ok',
+    routes: [
+        {
+            distance: 350000,
+            duration: 12000,
+            geometry: {
+                coordinates: [
+                    [-66.15678, -17.39345],
+                    [-66.15, -17.4],
+                    [-63.182, -17.784],
+                ],
+                type: 'LineString',
+            },
+            legs: [],
+        },
+    ],
+    waypoints: [],
+};
+
+describe('GeoService - OSRM Route Calculation', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('deberia calcular ruta exitosamente con OSRM', async () => {
+        axios.get.mockResolvedValue({ data: OSRM_RESPONSE_OK });
+
+        const result = await geoService.calcularRuta(-17.39345, -66.15678, -17.784, -63.182);
+
+        expect(axios.get).toHaveBeenCalledTimes(1);
+        expect(result.distance).toBe(350);
+        expect(result.duration).toBe(200);
+        expect(result.path).toHaveLength(3);
+        expect(result.origin.latitude).toBe(-17.39345);
+        expect(result.origin.longitude).toBe(-66.15678);
+        expect(result.destination.latitude).toBe(-17.784);
+        expect(result.destination.longitude).toBe(-63.182);
+    });
+
+    it('deberia lanzar error si OSRM no encuentra ruta', async () => {
+        axios.get.mockResolvedValue({ data: { code: 'NoRoute' } });
+
+        await expect(
+            geoService.calcularRuta(-17.39345, -66.15678, -17.784, -63.182),
+        ).rejects.toThrow('Route not found');
+    });
+
+    it('deberia lanzar error si las coordenadas de origen son invalidas', async () => {
+        await expect(
+            geoService.calcularRuta(200, -66.15678, -17.784, -63.182),
+        ).rejects.toThrow('Coordenadas fuera de rango');
+    });
+});

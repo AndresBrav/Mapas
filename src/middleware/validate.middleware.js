@@ -3,7 +3,7 @@ import {
     createExampleSchema,
     idParamSchema,
 } from "../../schemas/example.schema.js";
-import { geocodeSchema } from "../../schemas/geo.schema.js";
+import { geocodeSchema, routeSchema } from "../../schemas/geo.schema.js";
 import constants from "../utils/constants.js";
 import { sendError } from "../utils/response.js";
 
@@ -68,4 +68,5 @@ export const validateRequestMiddleware = {
     createExample: () => validate(createExampleSchema),
     getExample: () => validate(idParamSchema),
     geocode: () => validate(geocodeSchema, handleGeocodeValidationError),
+    route: () => validate(routeSchema),
 };

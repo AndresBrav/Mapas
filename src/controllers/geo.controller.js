@@ -35,3 +35,42 @@ export async function geocodeController(req, res) {
         logger.endTimer("GeocodeExecutionTime");
     }
 }
+
+export async function routeController(req, res) {
+    let responseBody = {};
+    logger.startTimer("RouteExecutionTime");
+
+    try {
+        const { origin, destination } = req.body;
+
+        const ruta = await geoService.calcularRuta(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+        );
+
+        responseBody = {
+            success: true,
+            data: {
+                distance: ruta.distance,
+                duration: ruta.duration,
+                path: ruta.path.map((p) => ({
+                    latitude: p.latitude,
+                    longitude: p.longitude,
+                })),
+            },
+        };
+
+        return res.status(200).json(responseBody);
+    } catch (error) {
+        logger.error("Error in routeController:", error);
+
+        const { statusHttp, response } = sendError(error?.errorCode);
+        responseBody = response;
+        return res.status(statusHttp).json(responseBody);
+    } finally {
+        logger.info({ "[RESPONSE BODY]": responseBody });
+        logger.endTimer("RouteExecutionTime");
+    }
+}

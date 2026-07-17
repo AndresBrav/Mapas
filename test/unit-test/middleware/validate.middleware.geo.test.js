@@ -70,3 +70,59 @@ describe('validate.middleware.js - geocode', () => {
     expect(res.status).toHaveBeenCalledWith(400);
   });
 });
+
+describe('validate.middleware.js - route', () => {
+  it('deberia llamar a next() si origen y destino son validos', () => {
+    const req = {
+      headers: { 'x-clientid': 'MY_CLIENT_ID' },
+      params: {},
+      body: {
+        origin: { latitude: -17.39345, longitude: -66.15678 },
+        destination: { latitude: -17.784, longitude: -63.182 }
+      }
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const next = vi.fn();
+
+    validateRequestMiddleware.route()(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  it('deberia retornar 400 si la latitud de origen esta fuera de rango', () => {
+    const req = {
+      headers: { 'x-clientid': 'MY_CLIENT_ID' },
+      params: {},
+      body: {
+        origin: { latitude: 100, longitude: -66.15678 },
+        destination: { latitude: -17.784, longitude: -63.182 }
+      }
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const next = vi.fn();
+
+    validateRequestMiddleware.route()(req, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it('deberia retornar 400 si la longitud de destino esta fuera de rango', () => {
+    const req = {
+      headers: { 'x-clientid': 'MY_CLIENT_ID' },
+      params: {},
+      body: {
+        origin: { latitude: -17.39345, longitude: -66.15678 },
+        destination: { latitude: -17.784, longitude: 200 }
+      }
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const next = vi.fn();
+
+    validateRequestMiddleware.route()(req, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+});

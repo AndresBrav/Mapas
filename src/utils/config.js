@@ -10,5 +10,8 @@ export default {
     NOMINATIM_BASE_URL:
         process.env.NOMINATIM_BASE_URL ||
         "https://nominatim.openstreetmap.org/search",
+    OSRM_BASE_URL:
+        process.env.OSRM_BASE_URL ||
+        "https://router.project-osrm.org/route/v1/driving",
     AUTH_CACHE_TTL: parseInt(process.env.AUTH_CACHE_TTL || "300", 10),
 };
