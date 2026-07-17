@@ -3,6 +3,7 @@ export default {
     BAD_REQUEST: 'BR001',
     NOT_FOUND: 'NF001',
     INTERNAL_ERROR: 'SE001',
-    INVALID_TOKEN: 'AU001'
+    INVALID_TOKEN: 'AU001',
+    MISSING_TOKEN: 'AU003'
   }
 };
