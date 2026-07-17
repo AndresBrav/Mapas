@@ -41,6 +41,7 @@ const validate =
             }
             next();
         } catch (error) {
+            logger.warn({ validationError: error.message });
             const { statusHttp, response } = sendError(
                 constants.errors.BAD_REQUEST,
             );
@@ -51,10 +52,10 @@ const validate =
 // Agregamos una función manejadora para los fallos del geocode:
 const handleGeocodeValidationError = (error, res) => {
     // Retorna el formato exacto requerido: success: false, message: "Address is required."
-    const addressIssue = error.issues.find((issue) =>
+    const hasAddressIssue = error.issues.some((issue) =>
         issue.path.includes("address"),
     );
-    const message = addressIssue
+    const message = hasAddressIssue
         ? "Address is required."
         : "Invalid request data";
     return res.status(400).json({

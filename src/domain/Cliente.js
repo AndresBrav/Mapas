@@ -1,9 +1,19 @@
 export class Cliente {
     constructor(clientId, clientSecret) {
+        Cliente.validar(clientId, clientSecret);
         this.clientId = clientId;
         this.clientSecret = clientSecret;
+    }
 
-        if (!this.esValido()) {
+    static validar(clientId, clientSecret) {
+        const esValido =
+            typeof clientId === 'string' &&
+            clientId.trim().length > 0 &&
+            clientId.length <= 100 &&
+            typeof clientSecret === 'string' &&
+            clientSecret.length >= 8;
+
+        if (!esValido) {
             throw new Error(
                 `Credenciales de cliente inválidas: clientId=${clientId}`,
             );

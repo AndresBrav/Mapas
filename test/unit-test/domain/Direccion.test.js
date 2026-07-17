@@ -20,4 +20,20 @@ describe('Direccion Domain Model', () => {
     expect(() => new Direccion('')).toThrowError("Address is required.");
     expect(() => new Direccion('   ')).toThrowError("Address is required.");
   });
+
+  it('static validar deberia lanzar error para direccion vacia', () => {
+    expect(() => Direccion.validar('')).toThrowError("Address is required.");
+  });
+
+  it('static validar no deberia lanzar error para direccion valida', () => {
+    expect(() => Direccion.validar('Av. América 123')).not.toThrow();
+  });
+
+  it('esVacia deberia retornar true para direccion vacia y false para valida', () => {
+    const direccion = new Direccion('Av. América', null);
+    expect(direccion.esVacia()).toBe(false);
+
+    direccion.address = '';
+    expect(direccion.esVacia()).toBe(true);
+  });
 });

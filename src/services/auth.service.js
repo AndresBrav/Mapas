@@ -8,7 +8,7 @@ import config from "../utils/config.js";
 const cachePrefix = "auth:client:";
 
 export const authenticate = async (clientId, clientSecret) => {
-    new Cliente(clientId, clientSecret);
+    Cliente.validar(clientId, clientSecret);
 
     const cacheKey = `${cachePrefix}${clientId}`;
 

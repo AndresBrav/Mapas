@@ -1,9 +1,12 @@
 export class Direccion {
   constructor(address, coordenadas = null) {
+    Direccion.validar(address);
     this.address = address;
     this.coordenadas = coordenadas;
+  }
 
-    if (this.esVacia()) {
+  static validar(address) {
+    if (!address || address.trim().length === 0) {
       throw new Error("Address is required.");
     }
   }

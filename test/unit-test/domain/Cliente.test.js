@@ -20,4 +20,12 @@ describe('Cliente.js', () => {
         const cliente = new Cliente('valid-id', 'valid-secret-ok');
         expect(cliente.esValido()).toBe(true);
     });
+
+    it('static validar should not throw for valid credentials', () => {
+        expect(() => Cliente.validar('geo-app', 'valid-secret-ok')).not.toThrow();
+    });
+
+    it('static validar should throw for empty clientId', () => {
+        expect(() => Cliente.validar('', 'valid-secret-ok')).toThrow('Credenciales de cliente inválidas');
+    });
 });

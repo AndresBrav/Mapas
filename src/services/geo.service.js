@@ -10,7 +10,7 @@ export class GeoService {
         logger.info({ "GeoService.geocodificar": { address } });
 
         // Validacion de dominio: lanza error si la direccion es invalida
-        new Direccion(address);
+        Direccion.validar(address);
 
         const cacheKey = `geo:geocode:${address}`;
 
@@ -60,8 +60,8 @@ export class GeoService {
             throw error;
         }
 
-        const latitude = parseFloat(data[0].lat);
-        const longitude = parseFloat(data[0].lon);
+        const latitude = Number.parseFloat(data[0].lat);
+        const longitude = Number.parseFloat(data[0].lon);
 
         const coords = { latitude, longitude };
         const punto = new Punto(latitude, longitude);
