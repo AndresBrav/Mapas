@@ -1,13 +1,13 @@
 import { executeQuery } from '@tigo/postgres-connector';
 
-const TABLE = 'clients';
+const TABLE = 'application_client';
 
-export const findClientById = async (clientId) => {
+export const findClientByKey = async (clientKey) => {
     const query = `
-    SELECT client_id, client_secret, name, active
+    SELECT id, name, client_key, client_secret_hash, status
     FROM ${TABLE}
-    WHERE client_id = $1 AND active = TRUE;
+    WHERE client_key = $1 AND status = 'ACTIVE';
   `;
-    const rows = await executeQuery(query, [clientId]);
+    const rows = await executeQuery(query, [clientKey]);
     return rows[0] || null;
 };

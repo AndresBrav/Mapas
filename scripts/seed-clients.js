@@ -1,42 +1,40 @@
 import "dotenv/config";
+import bcrypt from "bcrypt";
 import { executeQuery, initializeDB } from "@tigo/postgres-connector";
+
+const SALT_ROUNDS = 12;
 
 const createTableIfNotExists = async () => {
     const query = `
-    CREATE TABLE IF NOT EXISTS clients (
-        client_id       VARCHAR(100) PRIMARY KEY,
-        client_secret   VARCHAR(255) NOT NULL,
-        name            VARCHAR(200),
-        active          BOOLEAN DEFAULT TRUE,
-        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CREATE TABLE IF NOT EXISTS application_client (
+        id                 SERIAL PRIMARY KEY,
+        name               VARCHAR(200) NOT NULL,
+        client_key         VARCHAR(100) UNIQUE NOT NULL,
+        client_secret_hash VARCHAR(255) NOT NULL,
+        status             VARCHAR(20) DEFAULT 'ACTIVE',
+        created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
     await executeQuery(query);
-    console.log('Tabla "clients" verificada/creada.');
+    console.log('Tabla "application_client" verificada/creada.');
 };
 
 const clients = [
-    {
-        clientId: "geo-app-prod",
-        clientSecret: "sk-prod-abc123def",
-        name: "Geo App Producción",
-    },
-    {
-        clientId: "geo-app-staging",
-        clientSecret: "sk-staging-xyz789ghi",
-        name: "Geo App Staging",
-    },
+    { clientKey: "envio-app", clientSecret: "123456789ABC", name: "Servicio de Envíos" },
+    { clientKey: "geo-app-prod", clientSecret: "sk-prod-abc123def", name: "Geo App Producción" },
 ];
 
-const upsertClient = async ({ clientId, clientSecret, name }) => {
+const upsertClient = async ({ clientKey, clientSecret, name }) => {
+    const hash = await bcrypt.hash(clientSecret, SALT_ROUNDS);
     const query = `
-    INSERT INTO clients (client_id, client_secret, name, active)
-    VALUES ($1, $2, $3, TRUE)
-    ON CONFLICT (client_id)
-    DO UPDATE SET client_secret = $2, name = $3, active = TRUE;
+    INSERT INTO application_client (name, client_key, client_secret_hash, status)
+    VALUES ($1, $2, $3, 'ACTIVE')
+    ON CONFLICT (client_key)
+    DO UPDATE SET name = $1, client_secret_hash = $3, status = 'ACTIVE', updated_at = CURRENT_TIMESTAMP;
   `;
-    await executeQuery(query, [clientId, clientSecret, name]);
-    console.log(`Cliente "${clientId}" insertado/actualizado.`);
+    await executeQuery(query, [name, clientKey, hash]);
+    console.log(`Cliente "${clientKey}" insertado/actualizado.`);
 };
 
 try {
