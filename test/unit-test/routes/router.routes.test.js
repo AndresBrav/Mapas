@@ -14,7 +14,8 @@ vi.mock('../../../src/controllers/example.controller.js', () => ({
 }));
 vi.mock('../../../src/controllers/geo.controller.js', () => ({
   geocodeController: vi.fn(),
-  routeController: vi.fn()
+  routeController: vi.fn(),
+  distanceController: vi.fn()
 }));
 vi.mock('../../../src/middleware/validate.middleware.js', () => ({
   validateRequestMiddleware: {
@@ -22,6 +23,7 @@ vi.mock('../../../src/middleware/validate.middleware.js', () => ({
     getExample: vi.fn(() => 'getValidator'),
     geocode: vi.fn(() => 'geocodeValidator'),
     route: vi.fn(() => 'routeValidator'),
+    distance: vi.fn(() => 'distanceValidator'),
   }
 }));
 
@@ -38,5 +40,6 @@ describe('router.routes.js', () => {
     expect(router.get).toHaveBeenCalledWith('/examples/:id', expect.anything(), expect.anything());
     expect(router.post).toHaveBeenCalledWith('/geo/geocode', expect.anything(), expect.anything());
     expect(router.post).toHaveBeenCalledWith('/geo/route', expect.anything(), expect.anything());
+    expect(router.post).toHaveBeenCalledWith('/geo/distance', expect.anything(), expect.anything());
   });
 });

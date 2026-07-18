@@ -31,3 +31,12 @@ export const routeSchema = z
         ...headers,
     })
     .strict();
+
+// Validacion para POST /api/v1/geo/distance
+export const distanceSchema = z
+    .object({
+        origin: puntoSchema,
+        destination: puntoSchema,
+        ...headers,
+    })
+    .strict();

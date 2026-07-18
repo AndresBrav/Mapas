@@ -149,8 +149,10 @@ describe('GeoService - OSRM Route Calculation', () => {
         const result = await geoService.calcularRuta(-17.39345, -66.15678, -17.784, -63.182);
 
         expect(axios.get).toHaveBeenCalledTimes(1);
-        expect(result.distance).toBe(350);
-        expect(result.duration).toBe(200);
+        expect(axios.get).toHaveBeenCalledWith(
+            expect.stringContaining('overview=full&geometries=geojson'),
+            expect.anything(),
+        );
         expect(result.path).toHaveLength(3);
         expect(result.origin.latitude).toBe(-17.39345);
         expect(result.origin.longitude).toBe(-66.15678);
@@ -169,6 +171,34 @@ describe('GeoService - OSRM Route Calculation', () => {
     it('deberia lanzar error si las coordenadas de origen son invalidas', async () => {
         await expect(
             geoService.calcularRuta(200, -66.15678, -17.784, -63.182),
+        ).rejects.toThrow('Coordenadas fuera de rango');
+    });
+
+    it('deberia calcular distancia exitosamente con OSRM', async () => {
+        axios.get.mockResolvedValue({ data: OSRM_RESPONSE_OK });
+
+        const result = await geoService.calcularDistancia(-17.39345, -66.15678, -17.784, -63.182);
+
+        expect(axios.get).toHaveBeenCalledTimes(1);
+        expect(axios.get).toHaveBeenCalledWith(
+            expect.stringContaining('overview=false'),
+            expect.anything(),
+        );
+        expect(result.distance).toBe(350);
+        expect(result.duration).toBe(200);
+    });
+
+    it('deberia lanzar error si OSRM no encuentra distancia', async () => {
+        axios.get.mockResolvedValue({ data: { code: 'NoRoute' } });
+
+        await expect(
+            geoService.calcularDistancia(-17.39345, -66.15678, -17.784, -63.182),
+        ).rejects.toThrow('Route not found');
+    });
+
+    it('deberia lanzar error si las coordenadas de distancia son invalidas', async () => {
+        await expect(
+            geoService.calcularDistancia(200, -66.15678, -17.784, -63.182),
         ).rejects.toThrow('Coordenadas fuera de rango');
     });
 });

@@ -4,12 +4,13 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('../../../src/services/geo.service.js', () => ({
   geoService: {
     geocodificar: vi.fn(),
-    calcularRuta: vi.fn()
+    calcularRuta: vi.fn(),
+    calcularDistancia: vi.fn()
   }
 }));
 
 import { geoService } from '../../../src/services/geo.service.js';
-import { geocodeController, routeController } from '../../../src/controllers/geo.controller.js';
+import { geocodeController, routeController, distanceController } from '../../../src/controllers/geo.controller.js';
 
 describe('geo.controller.js', () => {
   it('geocodeController deberia retornar 200 con la geocodificacion', async () => {
@@ -56,10 +57,11 @@ describe('geo.controller.js', () => {
 describe('geo.controller.js - routeController', () => {
   it('routeController deberia retornar 200 con la ruta calculada', async () => {
     const mockRuta = {
-      distance: 350,
-      duration: 200,
+      origin: { latitude: -17.39345, longitude: -66.15678 },
+      destination: { latitude: -17.784, longitude: -63.182 },
       path: [
         { latitude: -17.39345, longitude: -66.15678 },
+        { latitude: -17.3934, longitude: -66.1565 },
         { latitude: -17.784, longitude: -63.182 },
       ],
     };
@@ -81,10 +83,11 @@ describe('geo.controller.js - routeController', () => {
     expect(res.json).toHaveBeenCalledWith({
       success: true,
       data: {
-        distance: 350,
-        duration: 200,
+        origin: { latitude: -17.39345, longitude: -66.15678 },
+        destination: { latitude: -17.784, longitude: -63.182 },
         path: [
           { latitude: -17.39345, longitude: -66.15678 },
+          { latitude: -17.3934, longitude: -66.1565 },
           { latitude: -17.784, longitude: -63.182 },
         ],
       },
@@ -104,6 +107,56 @@ describe('geo.controller.js - routeController', () => {
     geoService.calcularRuta.mockRejectedValue(new Error('Route not found'));
 
     await routeController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      error: expect.objectContaining({
+        code: 'SE001',
+      }),
+    }));
+  });
+});
+
+describe('geo.controller.js - distanceController', () => {
+  it('distanceController deberia retornar 200 con la distancia calculada', async () => {
+    const mockDistancia = { distance: 350, duration: 200 };
+    const req = {
+      body: {
+        origin: { latitude: -17.39345, longitude: -66.15678 },
+        destination: { latitude: -17.784, longitude: -63.182 },
+      },
+      params: {},
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+
+    geoService.calcularDistancia.mockResolvedValue(mockDistancia);
+
+    await distanceController(req, res);
+
+    expect(geoService.calcularDistancia).toHaveBeenCalledWith(-17.39345, -66.15678, -17.784, -63.182);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: {
+        distance: 350,
+        duration: 200,
+      },
+    });
+  });
+
+  it('distanceController deberia manejar excepciones y retornar error formateado', async () => {
+    const req = {
+      body: {
+        origin: { latitude: -17.39345, longitude: -66.15678 },
+        destination: { latitude: -17.784, longitude: -63.182 },
+      },
+      params: {},
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+
+    geoService.calcularDistancia.mockRejectedValue(new Error('Route not found'));
+
+    await distanceController(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({

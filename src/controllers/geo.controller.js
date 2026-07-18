@@ -53,8 +53,14 @@ export async function routeController(req, res) {
         responseBody = {
             success: true,
             data: {
-                distance: ruta.distance,
-                duration: ruta.duration,
+                origin: {
+                    latitude: ruta.origin.latitude,
+                    longitude: ruta.origin.longitude,
+                },
+                destination: {
+                    latitude: ruta.destination.latitude,
+                    longitude: ruta.destination.longitude,
+                },
                 path: ruta.path.map((p) => ({
                     latitude: p.latitude,
                     longitude: p.longitude,
@@ -72,5 +78,40 @@ export async function routeController(req, res) {
     } finally {
         logger.info({ "[RESPONSE BODY]": responseBody });
         logger.endTimer("RouteExecutionTime");
+    }
+}
+
+export async function distanceController(req, res) {
+    let responseBody = {};
+    logger.startTimer("DistanceExecutionTime");
+
+    try {
+        const { origin, destination } = req.body;
+
+        const distancia = await geoService.calcularDistancia(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+        );
+
+        responseBody = {
+            success: true,
+            data: {
+                distance: distancia.distance,
+                duration: distancia.duration,
+            },
+        };
+
+        return res.status(200).json(responseBody);
+    } catch (error) {
+        logger.error("Error in distanceController:", error);
+
+        const { statusHttp, response } = sendError(error?.errorCode);
+        responseBody = response;
+        return res.status(statusHttp).json(responseBody);
+    } finally {
+        logger.info({ "[RESPONSE BODY]": responseBody });
+        logger.endTimer("DistanceExecutionTime");
     }
 }

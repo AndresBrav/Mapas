@@ -2,6 +2,7 @@ import axios from "axios";
 import { logger } from "@tigo/logger";
 import { getValue, setValue } from "@tigo/redis-connector";
 import { Direccion } from "../domain/Direccion.js";
+import { Distancia } from "../domain/Distancia.js";
 import { Punto } from "../domain/Punto.js";
 import { Ruta } from "../domain/Ruta.js";
 import config from "../utils/config.js";
@@ -91,14 +92,8 @@ export class GeoService {
         return new Direccion(address, punto);
     }
 
-    async calcularRuta(originLat, originLng, destLat, destLng) {
-        logger.info({ "GeoService.calcularRuta": { originLat, originLng, destLat, destLng } });
-
-        // Validacion de dominio
-        const origin = new Punto(originLat, originLng);
-        const destination = new Punto(destLat, destLng);
-
-        const url = `${config.OSRM_BASE_URL}/${originLng},${originLat};${destLng},${destLat}?overview=full&geometries=geojson`;
+    async _requestOSRM(originLat, originLng, destLat, destLng, params = "") {
+        const url = `${config.OSRM_BASE_URL}/${originLng},${originLat};${destLng},${destLat}${params}`;
 
         const response = await axios.get(url, {
             headers: {
@@ -114,18 +109,39 @@ export class GeoService {
                 `Route not found between (${originLat},${originLng}) and (${destLat},${destLng})`,
             );
             error.statusCode = 404;
-            logger.warn({ "GeoService.calcularRuta": { notFound: true } });
             throw error;
         }
 
-        const route = data.routes[0];
-        const distanceKm = Number.parseFloat((route.distance / 1000).toFixed(2));
-        const durationMin = Math.ceil(route.duration / 60);
+        return data.routes[0];
+    }
+
+    async calcularRuta(originLat, originLng, destLat, destLng) {
+        logger.info({ "GeoService.calcularRuta": { originLat, originLng, destLat, destLng } });
+
+        const origin = new Punto(originLat, originLng);
+        const destination = new Punto(destLat, destLng);
+
+        const route = await this._requestOSRM(originLat, originLng, destLat, destLng, "?overview=full&geometries=geojson");
+
         const coords = route.geometry.coordinates.map(
             ([lng, lat]) => new Punto(lat, lng),
         );
 
-        return new Ruta({ origin, destination, distance: distanceKm, duration: durationMin, path: coords });
+        return new Ruta({ origin, destination, path: coords });
+    }
+
+    async calcularDistancia(originLat, originLng, destLat, destLng) {
+        logger.info({ "GeoService.calcularDistancia": { originLat, originLng, destLat, destLng } });
+
+        const origin = new Punto(originLat, originLng);
+        const destination = new Punto(destLat, destLng);
+
+        const route = await this._requestOSRM(originLat, originLng, destLat, destLng, "?overview=false");
+
+        const distanceKm = Number.parseFloat((route.distance / 1000).toFixed(2));
+        const durationMin = Math.ceil(route.duration / 60);
+
+        return new Distancia({ distance: distanceKm, duration: durationMin });
     }
 }
 

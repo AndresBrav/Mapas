@@ -4,7 +4,7 @@ import {
     createExampleController,
     getExampleController,
 } from "../controllers/example.controller.js";
-import { geocodeController, routeController } from "../controllers/geo.controller.js";
+import { geocodeController, routeController, distanceController } from "../controllers/geo.controller.js";
 import { validateRequestMiddleware } from "../middleware/validate.middleware.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 const { Router } = ultimateExpress;
@@ -40,6 +40,12 @@ router.post(
     "/geo/route",
     validateRequestMiddleware.route(),
     routeController,
+);
+
+router.post(
+    "/geo/distance",
+    validateRequestMiddleware.distance(),
+    distanceController,
 );
 
 export default router;
