@@ -21,8 +21,16 @@ const createTableIfNotExists = async () => {
 };
 
 const clients = [
-    { clientKey: "envio-app", clientSecret: "123456789ABC", name: "Servicio de Envíos" },
-    { clientKey: "geo-app-prod", clientSecret: "sk-prod-abc123def", name: "Geo App Producción" },
+    {
+        clientKey: "envio-app",
+        clientSecret: "123456789ABC",
+        name: "Servicio de Envíos",
+    },
+    {
+        clientKey: "geo-app-prod",
+        clientSecret: "sk-prod-abc123def",
+        name: "Geo App Producción",
+    },
 ];
 
 const upsertClient = async ({ clientKey, clientSecret, name }) => {
