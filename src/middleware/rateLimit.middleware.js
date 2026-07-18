@@ -2,7 +2,7 @@ import { rateLimit } from "express-rate-limit";
 import { getValue, setValue } from "@tigo/redis-connector";
 import config from "../utils/config.js";
 
-class RedisConnectorStore {
+export class RedisConnectorStore {
     constructor() {
         this.windowMs = config.RATE_LIMIT_WINDOW_MS;
     }
