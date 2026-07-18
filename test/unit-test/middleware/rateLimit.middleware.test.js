@@ -14,6 +14,6 @@ describe('rateLimit.middleware.js', () => {
 
     it('deberia tener 3 parametros (req, res, next)', async () => {
         const { rateLimitMiddleware } = await import('../../../src/middleware/rateLimit.middleware.js');
-        expect(rateLimitMiddleware.length).toBe(3);
+        expect(rateLimitMiddleware).toHaveLength(3);
     });
 });
