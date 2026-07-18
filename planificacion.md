@@ -24,11 +24,13 @@ graph TD
 En esta fase se valida y ajusta la estructura de directorios existente siguiendo los principios de Clean Architecture y la convención de módulos nativos de JavaScript (`ESM`).
 
 ### 1. Dependencias del Proyecto
+
 Se mantiene la configuración nativa de Node.js en `package.json` con `"type": "module"`. Las dependencias clave para validación y pruebas son:
-* `ultimate-express` como framework.
-* `zod` para validación de entrada.
-* `@tigo/redis-connector` para la caché.
-* `vitest` para pruebas unitarias.
+
+- `ultimate-express` como framework.
+- `zod` para validación de entrada.
+- `@tigo/redis-connector` para la caché.
+- `vitest` para pruebas unitarias.
 
 ### 2. Estructura de Directorios
 
@@ -57,47 +59,51 @@ src/
 Implementar las clases en JavaScript que manejan las reglas del negocio de manera aislada de Express.
 
 ### `src/domain/Punto.js` (Validación de rangos)
+
 ```javascript
 export class Punto {
-  constructor(latitude, longitude) {
-    this.latitude = Number(latitude);
-    this.longitude = Number(longitude);
-    
-    if (!this.esValido()) {
-      throw new Error(`Coordenadas fuera de rango válido (-90 a 90, -180 a 180): lat=${latitude}, lng=${longitude}`);
-    }
-  }
+    constructor(latitude, longitude) {
+        this.latitude = Number(latitude);
+        this.longitude = Number(longitude);
 
-  esValido() {
-    return (
-      !isNaN(this.latitude) &&
-      !isNaN(this.longitude) &&
-      this.latitude >= -90 &&
-      this.latitude <= 90 &&
-      this.longitude >= -180 &&
-      this.longitude <= 180
-    );
-  }
+        if (!this.esValido()) {
+            throw new Error(
+                `Coordenadas fuera de rango válido (-90 a 90, -180 a 180): lat=${latitude}, lng=${longitude}`,
+            );
+        }
+    }
+
+    esValido() {
+        return (
+            !isNaN(this.latitude) &&
+            !isNaN(this.longitude) &&
+            this.latitude >= -90 &&
+            this.latitude <= 90 &&
+            this.longitude >= -180 &&
+            this.longitude <= 180
+        );
+    }
 }
 ```
 
 ### `src/domain/Direccion.js` (Validación de dirección no vacía)
+
 ```javascript
-import { Punto } from './Punto.js';
+import { Punto } from "./Punto.js";
 
 export class Direccion {
-  constructor(address, coordenadas = null) {
-    this.address = address;
-    this.coordenadas = coordenadas;
-    
-    if (this.esVacia()) {
-      throw new Error("Address is required.");
-    }
-  }
+    constructor(address, coordenadas = null) {
+        this.address = address;
+        this.coordenadas = coordenadas;
 
-  esVacia() {
-    return !this.address || this.address.trim().length === 0;
-  }
+        if (this.esVacia()) {
+            throw new Error("Address is required.");
+        }
+    }
+
+    esVacia() {
+        return !this.address || this.address.trim().length === 0;
+    }
 }
 ```
 
@@ -108,30 +114,31 @@ export class Direccion {
 En JavaScript, el conector a la caché Redis se obtiene directamente de `@tigo/redis-connector`. El cliente para el proveedor de mapas se integrará mediante un adaptador flexible.
 
 ### Adaptador de Caché con `@tigo/redis-connector`
+
 El SDK provee las funciones `getRedisClient()`, por lo que implementamos el helper:
 
 ```javascript
-import { getRedisClient } from '@tigo/redis-connector';
+import { getRedisClient } from "@tigo/redis-connector";
 
 export class RedisCacheAdapter {
-  constructor() {
-    this.client = getRedisClient();
-  }
+    constructor() {
+        this.client = getRedisClient();
+    }
 
-  async get(clave) {
-    const raw = await this.client.get(`geo:geocode:${clave}`);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  }
+    async get(clave) {
+        const raw = await this.client.get(`geo:geocode:${clave}`);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    }
 
-  async set(clave, valor, ttlSeconds) {
-    await this.client.set(
-      `geo:geocode:${clave}`,
-      JSON.stringify(valor),
-      'EX',
-      ttlSeconds
-    );
-  }
+    async set(clave, valor, ttlSeconds) {
+        await this.client.set(
+            `geo:geocode:${clave}`,
+            JSON.stringify(valor),
+            "EX",
+            ttlSeconds,
+        );
+    }
 }
 ```
 
@@ -139,60 +146,76 @@ export class RedisCacheAdapter {
 
 ## 🧠 Fase 4: Servicios de Aplicación (Cache-Aside con TTL Configurable)
 
-Implementar el servicio que aplica la lógica *Cache-Aside* y la tolerancia a fallos con reintentos.
+Implementar el servicio que aplica la lógica _Cache-Aside_ y la tolerancia a fallos con reintentos.
 
 ### `src/services/geo.service.js`
+
 ```javascript
-import { Direccion } from '../domain/Direccion.js';
-import { Punto } from '../domain/Punto.js';
+import { Direccion } from "../domain/Direccion.js";
+import { Punto } from "../domain/Punto.js";
 
 export class GeoService {
-  constructor(mapConnector, cacheConnector) {
-    this.mapConnector = mapConnector;
-    this.cacheConnector = cacheConnector;
-    this.TTL_CACHE = parseInt(process.env.GEO_CACHE_TTL || '86400', 10);
-  }
-
-  async geocodificar(address) {
-    const direccionInput = new Direccion(address);
-
-    // 1. Intentar leer de caché (Cache-Aside)
-    try {
-      const cachedCoords = await this.cacheConnector.get(address);
-      if (cachedCoords) {
-        return new Direccion(address, new Punto(cachedCoords.latitude, cachedCoords.longitude));
-      }
-    } catch (error) {
-      console.warn("Fallo al leer de la caché, continuando con consulta directa...", error);
+    constructor(mapConnector, cacheConnector) {
+        this.mapConnector = mapConnector;
+        this.cacheConnector = cacheConnector;
+        this.TTL_CACHE = parseInt(process.env.GEO_CACHE_TTL || "86400", 10);
     }
 
-    // 2. Consulta con Retry Policy ante caídas del proveedor
-    const coordenadas = await this.ejecutarConReintentos(() => 
-      this.mapConnector.geocode(address)
-    );
+    async geocodificar(address) {
+        const direccionInput = new Direccion(address);
 
-    const puntoResultado = new Punto(coordenadas.latitude, coordenadas.longitude);
+        // 1. Intentar leer de caché (Cache-Aside)
+        try {
+            const cachedCoords = await this.cacheConnector.get(address);
+            if (cachedCoords) {
+                return new Direccion(
+                    address,
+                    new Punto(cachedCoords.latitude, cachedCoords.longitude),
+                );
+            }
+        } catch (error) {
+            console.warn(
+                "Fallo al leer de la caché, continuando con consulta directa...",
+                error,
+            );
+        }
 
-    // 3. Escribir en caché de forma asíncrona
-    try {
-      await this.cacheConnector.set(address, puntoResultado, this.TTL_CACHE);
-    } catch (error) {
-      console.warn("Fallo al escribir en la caché...", error);
+        // 2. Consulta con Retry Policy ante caídas del proveedor
+        const coordenadas = await this.ejecutarConReintentos(() =>
+            this.mapConnector.geocode(address),
+        );
+
+        const puntoResultado = new Punto(
+            coordenadas.latitude,
+            coordenadas.longitude,
+        );
+
+        // 3. Escribir en caché de forma asíncrona
+        try {
+            await this.cacheConnector.set(
+                address,
+                puntoResultado,
+                this.TTL_CACHE,
+            );
+        } catch (error) {
+            console.warn("Fallo al escribir en la caché...", error);
+        }
+
+        return new Direccion(address, puntoResultado);
     }
 
-    return new Direccion(address, puntoResultado);
-  }
-
-  async ejecutarConReintentos(fn, reintentos = 3, retraso = 1000) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (reintentos <= 0) throw error;
-      console.log(`Reintentando en ${retraso}ms... (${reintentos} restantes)`);
-      await new Promise(resolve => setTimeout(resolve, retraso));
-      return this.ejecutarConReintentos(fn, reintentos - 1, retraso * 2);
+    async ejecutarConReintentos(fn, reintentos = 3, retraso = 1000) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (reintentos <= 0) throw error;
+            console.log(
+                `Reintentando en ${retraso}ms... (${reintentos} restantes)`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, retraso));
+            return this.ejecutarConReintentos(fn, reintentos - 1, retraso * 2);
+        }
     }
-  }
 }
 ```
 
@@ -203,30 +226,29 @@ export class GeoService {
 Implementar los controladores y esquemas de validación Zod en `src/schemas/` y configurar las rutas en `src/routes/router.routes.js`.
 
 ### Middleware de Validación Zod (`src/middleware/validate.middleware.js`)
+
 ```javascript
-import { ZodError } from 'zod';
+import { ZodError } from "zod";
 
 export const validateRequest = (schema) => (req, res, next) => {
-  try {
-    schema.parse(req.body);
-    next();
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: error.errors[0].message
-      });
+    try {
+        schema.parse(req.body);
+        next();
+    } catch (error) {
+        if (error instanceof ZodError) {
+            return res.status(400).json({
+                success: false,
+                message: error.errors[0].message,
+            });
+        }
+        next(error);
     }
-    next(error);
-  }
 };
 ```
 
 ---
 
 ## 🛡️ Fase 6: Rate Limiting y Resiliencia
-
-Implementar un rate limiter en Express para controlar el flujo hacia el proveedor de mapas y cumplir los requisitos de protección del servicio externo.
 
 ---
 
@@ -247,10 +269,13 @@ npm run coverage
 Esta fase incorpora las especificaciones comunes y obligatorias del bootcamp:
 
 ### 1. Pruebas de Rendimiento con K6
+
 Script para simular carga y validar los umbrales: `p95 <= 500 ms` y `tasa de error < 1%`.
 
 ### 2. Contenedor Docker y Análisis Trivy
+
 Generar el `Dockerfile` optimizado y validar con Trivy.
 
 ### 3. Pipeline Jenkins
+
 Configurar el pipeline de CI/CD para automatizar análisis SAST, DAST, test coverage y despliegue continuo en Dev y QA.
