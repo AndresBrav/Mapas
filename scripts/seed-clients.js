@@ -31,6 +31,31 @@ const clients = [
         clientSecret: "sk-prod-abc123def",
         name: "Geo App Producción",
     },
+    {
+        clientKey: "geo-app-dev",
+        clientSecret: "sk-dev-geo456ghi",
+        name: "Geo App Desarrollo",
+    },
+    {
+        clientKey: "delivery-api",
+        clientSecret: "sk-delivery-jkl789",
+        name: "API de Delivery",
+    },
+    {
+        clientKey: "fleet-manager",
+        clientSecret: "sk-fleet-mno012",
+        name: "Gestión de Flota",
+    },
+    {
+        clientKey: "admin-dashboard",
+        clientSecret: "sk-admin-pqr345",
+        name: "Dashboard Admin",
+    },
+    {
+        clientKey: "tracking-service",
+        clientSecret: "sk-tracking-stu678",
+        name: "Servicio de Tracking",
+    },
 ];
 
 const upsertClient = async ({ clientKey, clientSecret, name }) => {
