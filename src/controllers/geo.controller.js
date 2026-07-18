@@ -98,8 +98,14 @@ export async function distanceController(req, res) {
         responseBody = {
             success: true,
             data: {
-                distance: distancia.distance,
-                duration: distancia.duration,
+                distance: {
+                    value: distancia.distance,
+                    unit: "km",
+                },
+                duration: {
+                    value: distancia.duration,
+                    unit: "min",
+                },
             },
         };
 

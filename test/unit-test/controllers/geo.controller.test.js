@@ -138,8 +138,8 @@ describe('geo.controller.js - distanceController', () => {
     expect(res.json).toHaveBeenCalledWith({
       success: true,
       data: {
-        distance: 350,
-        duration: 200,
+        distance: { value: 350, unit: "km" },
+        duration: { value: 200, unit: "min" },
       },
     });
   });
