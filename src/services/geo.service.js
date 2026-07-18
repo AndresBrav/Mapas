@@ -7,7 +7,33 @@ import { Ruta } from "../domain/Ruta.js";
 import config from "../utils/config.js";
 import { cacheAside } from "../utils/cache-aside.js";
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryable = (error) => {
+    if (error.response && error.response.status >= 500) return true;
+    if (error.code === "ECONNREFUSED" || error.code === "ECONNRESET" || error.code === "ETIMEDOUT" || error.code === "ENOTFOUND" || error.code === "EAI_AGAIN") return true;
+    return false;
+};
+
 export class GeoService {
+    async _requestWithRetry(url, options, maxRetries = 3) {
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                return await axios.get(url, options);
+            } catch (error) {
+                if (attempt < maxRetries && isRetryable(error)) {
+                    const delay = 500 * Math.pow(2, attempt);
+                    logger.warn({
+                        retry: { attempt: attempt + 1, maxRetries, delay, url, error: error.message },
+                    });
+                    await sleep(delay);
+                } else {
+                    throw error;
+                }
+            }
+        }
+    }
+
     async geocodificar(address) {
         logger.info({ "GeoService.geocodificar": { address } });
 
@@ -23,7 +49,7 @@ export class GeoService {
                     "GeoService.geocodificar": { cacheMiss: true, address },
                 });
 
-                const response = await axios.get(config.NOMINATIM_BASE_URL, {
+                const response = await this._requestWithRetry(config.NOMINATIM_BASE_URL, {
                     params: {
                         q: address,
                         format: "json",
@@ -59,7 +85,7 @@ export class GeoService {
     async _requestOSRM(originLat, originLng, destLat, destLng, params = "") {
         const url = `${config.OSRM_BASE_URL}/${originLng},${originLat};${destLng},${destLat}${params}`;
 
-        const response = await axios.get(url, {
+        const response = await this._requestWithRetry(url, {
             headers: {
                 "User-Agent": "TigoGeolocalizacionBootcamp/1.0",
             },

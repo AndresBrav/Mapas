@@ -16,6 +16,8 @@ describe("config.js", () => {
             "https://router.project-osrm.org/route/v1/driving",
         );
         expect(config.AUTH_CACHE_TTL).toBe(300);
+        expect(config.RATE_LIMIT_WINDOW_MS).toBe(900000);
+        expect(config.RATE_LIMIT_MAX).toBe(100);
     });
 
     it("deberia leer variables de entorno cuando estan definidas", async () => {
@@ -24,6 +26,8 @@ describe("config.js", () => {
         process.env.NOMINATIM_BASE_URL = "https://custom.nominatim.com/search";
         process.env.OSRM_BASE_URL = "https://custom.osrm.com/route";
         process.env.AUTH_CACHE_TTL = "600";
+        process.env.RATE_LIMIT_WINDOW_MS = "600000";
+        process.env.RATE_LIMIT_MAX = "50";
 
         const config = (await import("../../../src/utils/config.js")).default;
 
@@ -34,5 +38,7 @@ describe("config.js", () => {
         );
         expect(config.OSRM_BASE_URL).toBe("https://custom.osrm.com/route");
         expect(config.AUTH_CACHE_TTL).toBe(600);
+        expect(config.RATE_LIMIT_WINDOW_MS).toBe(600000);
+        expect(config.RATE_LIMIT_MAX).toBe(50);
     });
 });

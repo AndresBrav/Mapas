@@ -31,6 +31,10 @@ vi.mock('../../../src/middleware/auth.middleware.js', () => ({
   authMiddleware: vi.fn(),
 }));
 
+vi.mock('../../../src/middleware/rateLimit.middleware.js', () => ({
+  rateLimitMiddleware: vi.fn(),
+}));
+
 describe('router.routes.js', () => {
   it('should register the POST and GET routes of the example resource and geocode route', async () => {
     const { default: router } = await import('../../../src/routes/router.routes.js');

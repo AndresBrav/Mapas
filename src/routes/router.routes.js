@@ -4,9 +4,14 @@ import {
     createExampleController,
     getExampleController,
 } from "../controllers/example.controller.js";
-import { geocodeController, routeController, distanceController } from "../controllers/geo.controller.js";
+import {
+    geocodeController,
+    routeController,
+    distanceController,
+} from "../controllers/geo.controller.js";
 import { validateRequestMiddleware } from "../middleware/validate.middleware.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
+import { rateLimitMiddleware } from "../middleware/rateLimit.middleware.js";
 const { Router } = ultimateExpress;
 
 const router = Router();
@@ -16,6 +21,7 @@ router.get("/health", healthController);
 
 // Middleware de autenticacion para todas las rutas protegidas
 router.use(authMiddleware);
+router.use(rateLimitMiddleware);
 
 // Recurso de ejemplo: insertar y obtener el registro insertado.
 router.post(
@@ -36,11 +42,7 @@ router.post(
     geocodeController,
 );
 
-router.post(
-    "/geo/route",
-    validateRequestMiddleware.route(),
-    routeController,
-);
+router.post("/geo/route", validateRequestMiddleware.route(), routeController);
 
 router.post(
     "/geo/distance",

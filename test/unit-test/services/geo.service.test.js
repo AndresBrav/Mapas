@@ -201,4 +201,118 @@ describe('GeoService - OSRM Route Calculation', () => {
             geoService.calcularDistancia(200, -66.15678, -17.784, -63.182),
         ).rejects.toThrow('Coordenadas fuera de rango');
     });
+
+    // -----------------------------------------------------------------------
+    // RETRY: OSRM falla 1 vez (network error) y luego funciona
+    // -----------------------------------------------------------------------
+    it('deberia reintentar si OSRM falla con error de red y luego funcionar', async () => {
+        const networkError = new Error('ECONNREFUSED');
+        networkError.code = 'ECONNREFUSED';
+
+        axios.get
+            .mockRejectedValueOnce(networkError)
+            .mockResolvedValueOnce({ data: OSRM_RESPONSE_OK });
+
+        const result = await geoService.calcularRuta(-17.39345, -66.15678, -17.784, -63.182);
+
+        expect(axios.get).toHaveBeenCalledTimes(2);
+        expect(result.path).toHaveLength(3);
+    });
+
+    // -----------------------------------------------------------------------
+    // RETRY: OSRM falla 3 veces seguidas -> error final
+    // -----------------------------------------------------------------------
+    it('deberia lanzar error si OSRM falla las 3 veces con error de red', async () => {
+        const networkError = new Error('ETIMEDOUT');
+        networkError.code = 'ETIMEDOUT';
+
+        axios.get.mockRejectedValue(networkError);
+
+        await expect(
+            geoService.calcularRuta(-17.39345, -66.15678, -17.784, -63.182),
+        ).rejects.toThrow('ETIMEDOUT');
+
+        expect(axios.get).toHaveBeenCalledTimes(4);
+    });
+
+    // -----------------------------------------------------------------------
+    // RETRY: Error 4xx NO se reintenta
+    // -----------------------------------------------------------------------
+    it('NO deberia reintentar si OSRM responde con error 4xx', async () => {
+        const httpError = new Error('Bad Request');
+        httpError.response = { status: 400 };
+
+        axios.get.mockRejectedValue(httpError);
+
+        await expect(
+            geoService.calcularRuta(-17.39345, -66.15678, -17.784, -63.182),
+        ).rejects.toThrow('Bad Request');
+
+        expect(axios.get).toHaveBeenCalledTimes(1);
+    });
+
+    // -----------------------------------------------------------------------
+    // RETRY: OSRM falla 1 vez (5xx) y luego funciona
+    // -----------------------------------------------------------------------
+    it('deberia reintentar si OSRM falla con 5xx y luego funcionar', async () => {
+        const serverError = new Error('Internal Server Error');
+        serverError.response = { status: 503 };
+
+        axios.get
+            .mockRejectedValueOnce(serverError)
+            .mockResolvedValueOnce({ data: OSRM_RESPONSE_OK });
+
+        const result = await geoService.calcularRuta(-17.39345, -66.15678, -17.784, -63.182);
+
+        expect(axios.get).toHaveBeenCalledTimes(2);
+        expect(result.path).toHaveLength(3);
+    });
+});
+
+// -----------------------------------------------------------------------
+// RETRY: Nominatim — reintentos en geocodificacion
+// -----------------------------------------------------------------------
+describe('GeoService - Retry en Nominatim (Geocoding)', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        getValue.mockResolvedValue(null);
+        setValue.mockResolvedValue(undefined);
+    });
+
+    it('deberia reintentar si Nominatim falla con error de red y luego funcionar', async () => {
+        const networkError = new Error('ECONNRESET');
+        networkError.code = 'ECONNRESET';
+
+        axios.get
+            .mockRejectedValueOnce(networkError)
+            .mockResolvedValueOnce({ data: NOMINATIM_RESPONSE_OK });
+
+        const result = await geoService.geocodificar('Av. América 123, Cochabamba, Bolivia');
+
+        expect(axios.get).toHaveBeenCalledTimes(2);
+        expect(result.coordenadas.latitude).toBe(-17.39345);
+    });
+
+    it('deberia lanzar error si Nominatim falla las 3 veces', async () => {
+        const networkError = new Error('ENOTFOUND');
+        networkError.code = 'ENOTFOUND';
+
+        axios.get.mockRejectedValue(networkError);
+
+        await expect(
+            geoService.geocodificar('Av. América 123, Cochabamba, Bolivia'),
+        ).rejects.toThrow('ENOTFOUND');
+
+        expect(axios.get).toHaveBeenCalledTimes(4);
+    });
+
+    it('NO deberia reintentar si Nominatim devuelve array vacio (404 logico)', async () => {
+        axios.get.mockResolvedValue({ data: [] });
+
+        await expect(
+            geoService.geocodificar('Direccion Inexistente'),
+        ).rejects.toThrow('Address not found');
+
+        expect(axios.get).toHaveBeenCalledTimes(1);
+    });
 });

@@ -14,4 +14,6 @@ export default {
         process.env.OSRM_BASE_URL ||
         "https://router.project-osrm.org/route/v1/driving",
     AUTH_CACHE_TTL: parseInt(process.env.AUTH_CACHE_TTL || "300", 10),
+    RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10),
+    RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
 };
