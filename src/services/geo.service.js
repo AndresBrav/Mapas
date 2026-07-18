@@ -104,7 +104,7 @@ export class GeoService {
 
         const data = response.data;
 
-        if (!data || data.code !== "Ok" || !data.routes || data.routes.length === 0) {
+        if (data?.code !== "Ok" || !data?.routes?.length) {
             const error = new Error(
                 `Route not found between (${originLat},${originLng}) and (${destLat},${destLng})`,
             );
@@ -141,7 +141,7 @@ export class GeoService {
         const distanceKm = Number.parseFloat((route.distance / 1000).toFixed(2));
         const durationMin = Math.ceil(route.duration / 60);
 
-        return new Distancia({ distance: distanceKm, duration: durationMin });
+        return new Distancia({ origin, destination, distance: distanceKm, duration: durationMin });
     }
 }
 
