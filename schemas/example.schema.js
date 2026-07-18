@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { headersSchema } from './common.js';
 
 /**
  * Esquemas de validacion del recurso `example`.
@@ -12,11 +13,6 @@ import { z } from 'zod';
  * (id, created_at, updated_at los gestiona la base de datos)
  */
 
-const headers = {
-  xtraceid: z.string().min(1).max(350).optional(),
-  xclientid: z.string().min(1).max(350)
-};
-
 // POST /examples
 export const createExampleSchema = z.object({
   name: z.string().min(1).max(100),
@@ -25,11 +21,11 @@ export const createExampleSchema = z.object({
   price: z.number().min(0).optional(),
   active: z.boolean().optional(),
   registration_date: z.string().date().optional(),
-  ...headers
+  ...headersSchema
 }).strict();
 
 // GET /examples/:id  (id llega como string -> entero positivo)
 export const idParamSchema = z.object({
   id: z.coerce.number().int().positive(),
-  ...headers
+  ...headersSchema
 }).strict();

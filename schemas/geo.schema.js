@@ -1,9 +1,5 @@
 import { z } from "zod";
-
-const headers = {
-    xtraceid: z.string().min(1).max(350).optional(),
-    xclientid: z.string().min(1).max(350),
-};
+import { headersSchema } from "./common.js";
 
 const puntoSchema = z.object({
     latitude: z.number().min(-90).max(90),
@@ -19,7 +15,7 @@ export const geocodeSchema = z
             })
             .trim()
             .min(1, "Address is required."),
-        ...headers,
+        ...headersSchema,
     })
     .strict();
 
@@ -28,7 +24,7 @@ export const routeSchema = z
     .object({
         origin: puntoSchema,
         destination: puntoSchema,
-        ...headers,
+        ...headersSchema,
     })
     .strict();
 
@@ -37,6 +33,6 @@ export const distanceSchema = z
     .object({
         origin: puntoSchema,
         destination: puntoSchema,
-        ...headers,
+        ...headersSchema,
     })
     .strict();
