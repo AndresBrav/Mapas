@@ -17,6 +17,7 @@ vi.mock('body-parser', () => ({ default: { json: vi.fn(() => 'jsonMiddleware') }
 vi.mock('@tigo/logger', () => ({ httpLoggerMiddleware: vi.fn(() => 'httpLoggerMiddleware') }));
 vi.mock('@tigo/redis-connector', () => ({ initializeRedis: vi.fn() }));
 vi.mock('../../src/routes/router.routes.js', () => ({ default: 'routerRoutes' }));
+vi.mock('../../src/routes/swagger.routes.js', () => ({ default: 'swaggerRouter' }));
 vi.mock('../../src/utils/config.js', () => ({ default: { API_BASE_PATH: '/v1' } }));
 
 import '../../src/app.js';
@@ -26,6 +27,7 @@ import config from '../../src/utils/config.js';
 describe('app.js', () => {
   it('should initialize the app and mount the router on the base path', () => {
     expect(ultimateExpress).toHaveBeenCalled();
+    expect(mockApp.use).toHaveBeenCalledWith('/api-docs', 'swaggerRouter');
     expect(mockApp.use).toHaveBeenCalledWith(config.API_BASE_PATH, 'routerRoutes');
   });
 

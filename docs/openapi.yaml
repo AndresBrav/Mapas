@@ -1,0 +1,507 @@
+openapi: 3.0.3
+info:
+  title: P25 - Geolocalización y Rutas
+  description: |
+    Microservicio backend para geocodificar direcciones y calcular rutas,
+    distancias y tiempos estimados, con caché de resultados.
+  version: 1.0.0
+  contact:
+    name: Bootcamp Tigo
+  x-project: P25
+
+servers:
+  - url: http://localhost:3050/v1
+    description: Desarrollo local
+
+components:
+  securitySchemes:
+    ClientId:
+      type: apiKey
+      in: header
+      name: x-clientid
+      description: Identificador del cliente
+    ClientSecret:
+      type: apiKey
+      in: header
+      name: x-client-secret
+      description: Secreto del cliente
+
+  headers:
+    XTraceId:
+      schema:
+        type: string
+        maxLength: 350
+      description: Identificador único de trazabilidad (opcional)
+    XClientId:
+      schema:
+        type: string
+        maxLength: 350
+      description: Identificador del cliente
+
+  schemas:
+    Punto:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+          description: Latitud en grados decimales
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+          description: Longitud en grados decimales
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Código de error del proyecto
+              example: AU003
+            message:
+              type: string
+              description: Mensaje descriptivo del error
+          required: [code, message]
+      required: [error]
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP]
+      required: [status]
+
+    GeocodeRequest:
+      type: object
+      required: [address]
+      properties:
+        address:
+          type: string
+          minLength: 1
+          description: Dirección a geocodificar
+          example: Av. América 123, Cochabamba, Bolivia
+
+    GeocodeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          properties:
+            address:
+              type: string
+            latitude:
+              type: number
+            longitude:
+              type: number
+          required: [address, latitude, longitude]
+      required: [success, data]
+
+    GeocodeErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        message:
+          type: string
+      required: [success, message]
+
+    RouteRequest:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin:
+          $ref: "#/components/schemas/Punto"
+        destination:
+          $ref: "#/components/schemas/Punto"
+
+    RouteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          properties:
+            origin:
+              $ref: "#/components/schemas/Punto"
+            destination:
+              $ref: "#/components/schemas/Punto"
+            path:
+              type: array
+              items:
+                $ref: "#/components/schemas/Punto"
+          required: [origin, destination, path]
+      required: [success, data]
+
+    DistanceRequest:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin:
+          $ref: "#/components/schemas/Punto"
+        destination:
+          $ref: "#/components/schemas/Punto"
+
+    DistanceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          properties:
+            distance:
+              type: object
+              properties:
+                value:
+                  type: number
+                  description: Distancia en kilómetros
+                unit:
+                  type: string
+                  enum: [km]
+              required: [value, unit]
+            duration:
+              type: object
+              properties:
+                value:
+                  type: number
+                  description: Duración en minutos
+                unit:
+                  type: string
+                  enum: [min]
+              required: [value, unit]
+          required: [distance, duration]
+      required: [success, data]
+
+    CreateExampleRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        quantity:
+          type: integer
+          minimum: 0
+        price:
+          type: number
+          minimum: 0
+        active:
+          type: boolean
+        registration_date:
+          type: string
+          format: date
+
+    ExampleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+        active:
+          type: boolean
+        registration_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+security:
+  - ClientId: []
+    ClientSecret: []
+
+paths:
+  /health:
+    get:
+      summary: Verificar estado del servicio
+      operationId: healthCheck
+      tags:
+        - Health
+      security: []
+      responses:
+        "200":
+          description: Servicio funcionando correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /examples:
+    post:
+      summary: Crear un nuevo ejemplo
+      operationId: createExample
+      tags:
+        - Examples
+      parameters:
+        - in: header
+          name: x-traceid
+          schema:
+            type: string
+            maxLength: 350
+          required: false
+          description: Identificador de trazabilidad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExampleRequest"
+      responses:
+        "201":
+          description: Ejemplo creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExampleResponse"
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Error de autenticación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Demasiadas solicitudes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /examples/{id}:
+    get:
+      summary: Obtener un ejemplo por ID
+      operationId: getExample
+      tags:
+        - Examples
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: ID del ejemplo
+        - in: header
+          name: x-traceid
+          schema:
+            type: string
+            maxLength: 350
+          required: false
+          description: Identificador de trazabilidad
+      responses:
+        "200":
+          description: Ejemplo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExampleResponse"
+        "401":
+          description: Error de autenticación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Ejemplo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Demasiadas solicitudes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /geo/geocode:
+    post:
+      summary: Geocodificar una dirección
+      operationId: geocode
+      tags:
+        - Georreferenciación
+      parameters:
+        - in: header
+          name: x-traceid
+          schema:
+            type: string
+            maxLength: 350
+          required: false
+          description: Identificador de trazabilidad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GeocodeRequest"
+      responses:
+        "200":
+          description: Dirección geocodificada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeocodeResponse"
+        "400":
+          description: Dirección vacía o inválida
+          content:
+            application/json:
+              oneOf:
+                - schema:
+                    $ref: "#/components/schemas/ErrorResponse"
+                - schema:
+                    $ref: "#/components/schemas/GeocodeErrorResponse"
+        "401":
+          description: Error de autenticación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Dirección no encontrada en el mapa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Demasiadas solicitudes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /geo/route:
+    post:
+      summary: Calcular ruta entre dos puntos
+      operationId: calculateRoute
+      tags:
+        - Georreferenciación
+      parameters:
+        - in: header
+          name: x-traceid
+          schema:
+            type: string
+            maxLength: 350
+          required: false
+          description: Identificador de trazabilidad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteRequest"
+      responses:
+        "200":
+          description: Ruta calculada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteResponse"
+        "400":
+          description: Coordenadas inválidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Error de autenticación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Ruta no encontrada entre los puntos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Demasiadas solicitudes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /geo/distance:
+    post:
+      summary: Calcular distancia y tiempo entre dos puntos
+      operationId: calculateDistance
+      tags:
+        - Georreferenciación
+      parameters:
+        - in: header
+          name: x-traceid
+          schema:
+            type: string
+            maxLength: 350
+          required: false
+          description: Identificador de trazabilidad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DistanceRequest"
+      responses:
+        "200":
+          description: Distancia calculada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DistanceResponse"
+        "400":
+          description: Coordenadas inválidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Error de autenticación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Ruta no encontrada entre los puntos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Demasiadas solicitudes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

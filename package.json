@@ -31,7 +31,9 @@
         "express-prom-bundle": "^8.0.0",
         "express-rate-limit": "^8.6.0",
         "helmet": "^8.1.0",
+        "js-yaml": "^5.2.1",
         "luxon": "^3.7.2",
+        "swagger-ui-express": "^5.0.1",
         "ultimate-express": "2.0.9",
         "zod": "^4.1.12"
     },
