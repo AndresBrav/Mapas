@@ -10,7 +10,7 @@ export class RedisConnectorStore {
     async increment(key) {
         const redisKey = `ratelimit:${key}`;
         const current = await getValue(redisKey);
-        const totalHits = current ? parseInt(current, 10) + 1 : 1;
+        const totalHits = current ? Number.parseInt(current, 10) + 1 : 1;
         const ttlSeconds = Math.ceil(this.windowMs / 1000);
         await setValue(redisKey, String(totalHits), ttlSeconds);
         const resetTime = new Date(Date.now() + this.windowMs);
@@ -21,7 +21,7 @@ export class RedisConnectorStore {
         const redisKey = `ratelimit:${key}`;
         const current = await getValue(redisKey);
         if (current) {
-            const totalHits = parseInt(current, 10) - 1;
+            const totalHits = Number.parseInt(current, 10) - 1;
             if (totalHits <= 0) {
                 await setValue(redisKey, "0", Math.ceil(this.windowMs / 1000));
             } else {
