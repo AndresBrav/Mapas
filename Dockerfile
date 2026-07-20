@@ -6,13 +6,16 @@ ENV NODE_ENV=production
 
 WORKDIR $APP_HOME
 
-RUN apk upgrade --no-cache
+# gcompat: uWebSockets.js (dependencia nativa de ultimate-express) requiere glibc,
+# Alpine usa musl y no puede cargar el binario sin esta capa de compatibilidad.
+RUN apk upgrade --no-cache && apk add --no-cache gcompat
 
 COPY package*.json ./
 COPY node_modules ./node_modules
 COPY index.js ./
 COPY schemas ./schemas
 COPY src ./src
+COPY docs ./docs
 
 RUN npm prune --omit=dev \
     && addgroup -S app-group \

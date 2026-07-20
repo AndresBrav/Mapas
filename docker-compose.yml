@@ -24,6 +24,20 @@ services:
             - postgres-data:/var/lib/postgresql/data
         restart: unless-stopped
 
+    app:
+        build: .
+        container_name: p25-geo-app
+        ports:
+            - "${PORT}:${PORT}"
+        env_file: .env
+        environment:
+            - REDIS_HOST=redis
+            - P_DB_HOST=postgres
+        depends_on:
+            - redis
+            - postgres
+        restart: unless-stopped
+
     trivy-scan:
         profiles: ["trivy"]
         image: aquasec/trivy:latest
