@@ -47,7 +47,7 @@ services:
         command: >
             image --scanners vuln
             --severity LOW,MEDIUM,HIGH,CRITICAL
-            p25-geo-local:local
+            project-app:latest
 
 volumes:
     redis-data:
