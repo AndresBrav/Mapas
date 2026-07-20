@@ -31,6 +31,19 @@ describe('app.js', () => {
     expect(mockApp.use).toHaveBeenCalledWith(config.API_BASE_PATH, 'routerRoutes');
   });
 
+  it('should respond with 204 on /.well-known handler', () => {
+    const useCalls = mockApp.use.mock.calls;
+    const wellKnownCall = useCalls.find(call => call[0] === '/.well-known');
+    const wellKnownHandler = wellKnownCall[1];
+
+    const req = {};
+    const res = { status: vi.fn(() => ({ end: vi.fn() })) };
+
+    wellKnownHandler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(204);
+  });
+
   it('should set Cache-Control and Pragma headers via middleware', () => {
     const useCalls = mockApp.use.mock.calls;
     const cacheMiddleware = useCalls.find(call => typeof call[0] === 'function');
