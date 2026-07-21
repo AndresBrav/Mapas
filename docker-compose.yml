@@ -122,3 +122,4 @@ volumes:
     redis-data:
     postgres-data:
     trivy-db:
+        external: true
