@@ -72,9 +72,6 @@ pipeline {
         }
 
         stage('Deploy to Dev') {
-            when {
-                branch 'main'
-            }
             steps {
                 sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
                 sh 'docker compose -f docker-compose.yml up -d app'
@@ -83,9 +80,6 @@ pipeline {
         }
 
         stage('DAST - OWASP ZAP') {
-            when {
-                branch 'main'
-            }
             steps {
                 sh 'docker compose --profile zap run zap-scan'
             }
@@ -101,18 +95,12 @@ pipeline {
         }
 
         stage('Performance - K6') {
-            when {
-                branch 'main'
-            }
             steps {
                 sh 'docker compose --profile k6 run k6-load-test'
             }
         }
 
         stage('Deploy to QA') {
-            when {
-                branch 'main'
-            }
             steps {
                 echo 'Despliegue a QA - configurar según infraestructura'
             }
