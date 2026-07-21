@@ -17,12 +17,14 @@ pipeline {
         stage('Checkout') {
             steps {
                 sh 'git config --global http.postBuffer 524288000'
-                checkout([
-                    $class: 'GitSCM',
-                    branches: scm.branches,
-                    extensions: [[$class: 'CloneOption', depth: 1, shallow: true]],
-                    userRemoteConfigs: scm.userRemoteConfigs
-                ])
+                retry(3) {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: scm.branches,
+                        extensions: [[$class: 'CloneOption', depth: 1, shallow: true]],
+                        userRemoteConfigs: scm.userRemoteConfigs
+                    ])
+                }
             }
         }
 
