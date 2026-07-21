@@ -66,10 +66,12 @@ services:
         container_name: trivy-scan
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+            - trivy-db:/root/.cache/trivy
         command: >
             image --scanners vuln
-            --severity LOW,MEDIUM,HIGH,CRITICAL
-            project-app:latest
+            --severity CRITICAL,HIGH
+            --exit-code 1
+            p25-geo-app:latest
 
     k6-load-test:
         profiles: ["k6"]
@@ -119,3 +121,4 @@ services:
 volumes:
     redis-data:
     postgres-data:
+    trivy-db:

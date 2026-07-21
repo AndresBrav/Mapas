@@ -60,13 +60,7 @@ pipeline {
 
         stage('Container Scan - Trivy') {
             steps {
-                sh '''
-                    docker run --rm \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        aquasec/trivy:latest \
-                        image --severity CRITICAL,HIGH --exit-code 1 \
-                        ${DOCKER_IMAGE}:${DOCKER_TAG}
-                '''
+                sh 'docker compose --profile trivy run --rm trivy-scan'
             }
         }
 
