@@ -53,6 +53,9 @@ services:
             mock-maps:
                 condition: service_started
         restart: unless-stopped
+        networks:
+            - default
+            - zap-net
 
     mock-maps:
         build: ./test/mock-server
@@ -92,7 +95,6 @@ services:
                 condition: service_started
         environment:
             - ZAP_JVM_OPTS=-Xmx512m
-            - ZAP_OPTS=-config autoupdate.checkonstart=false -config autoupdate.downloadnewrelease=false
         command: >
             zap-api-scan.py
             -t /zap/openapi.yaml
@@ -104,7 +106,9 @@ services:
             -l FAIL
             -I
             -S
-            -z "-config replacer.full_list(0).description=auth1
+            -z "-config autoupdate.checkonstart=false
+                -config autoupdate.downloadnewrelease=false
+                -config replacer.full_list(0).description=auth1
                 -config replacer.full_list(0).enabled=true
                 -config replacer.full_list(0).matchtype=REQ_HEADER
                 -config replacer.full_list(0).matchstr=x-clientid
@@ -119,9 +123,16 @@ services:
         volumes:
             - ./docs/openapi.yaml:/zap/openapi.yaml:ro
             - ./docs/evidencias:/zap/wrk
+        networks:
+            - zap-net
 
 volumes:
     redis-data:
     postgres-data:
     trivy-db:
         external: true
+
+networks:
+    default:
+    zap-net:
+        internal: true
