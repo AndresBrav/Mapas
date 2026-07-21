@@ -16,7 +16,12 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    extensions: [[$class: 'CloneOption', depth: 1, shallow: true]],
+                    userRemoteConfigs: [[url: 'https://gitlab.com/AndresBrav/project.git']]
+                ])
             }
         }
 
