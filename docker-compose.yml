@@ -92,6 +92,7 @@ services:
                 condition: service_started
         environment:
             - ZAP_JVM_OPTS=-Xmx512m
+            - ZAP_OPTS=-config autoupdate.checkonstart=false -config autoupdate.downloadnewrelease=false
         command: >
             zap-api-scan.py
             -t /zap/openapi.yaml
@@ -103,9 +104,7 @@ services:
             -l FAIL
             -I
             -S
-            -z "-config autoupdate.checkonstart=false
-                -config autoupdate.downloadnewrelease=false
-                -config replacer.full_list(0).description=auth1
+            -z "-config replacer.full_list(0).description=auth1
                 -config replacer.full_list(0).enabled=true
                 -config replacer.full_list(0).matchtype=REQ_HEADER
                 -config replacer.full_list(0).matchstr=x-clientid
