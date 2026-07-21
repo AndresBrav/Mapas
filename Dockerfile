@@ -16,6 +16,7 @@ COPY index.js ./
 COPY schemas ./schemas
 COPY src ./src
 COPY docs ./docs
+COPY scripts ./scripts
 
 RUN npm prune --omit=dev \
     && addgroup --system app-group \

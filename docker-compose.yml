@@ -80,6 +80,42 @@ services:
         network_mode: "host"
         command: run /scripts/load_test.js
 
+    zap-scan:
+        profiles: ["zap"]
+        image: ghcr.io/zaproxy/zaproxy:stable
+        container_name: zap-scan
+        depends_on:
+            app:
+                condition: service_started
+        environment:
+            - ZAP_JVM_OPTS=-Xmx512m
+        command: >
+            zap-api-scan.py
+            -t /zap/openapi.yaml
+            -f openapi
+            -O http://app:3050/v1
+            -r zap-report.html
+            -J zap-report.json
+            -w zap-report.md
+            -l FAIL
+            -I
+            -S
+            -z "-config replacer.full_list(0).description=auth1
+                -config replacer.full_list(0).enabled=true
+                -config replacer.full_list(0).matchtype=REQ_HEADER
+                -config replacer.full_list(0).matchstr=x-clientid
+                -config replacer.full_list(0).replacement=envio-app
+                -config replacer.full_list(0).initiators=*
+                -config replacer.full_list(1).description=auth2
+                -config replacer.full_list(1).enabled=true
+                -config replacer.full_list(1).matchtype=REQ_HEADER
+                -config replacer.full_list(1).matchstr=x-client-secret
+                -config replacer.full_list(1).replacement=123456789ABC
+                -config replacer.full_list(1).initiators=*"
+        volumes:
+            - ./docs/openapi.yaml:/zap/openapi.yaml:ro
+            - ./docs/evidencias:/zap/wrk
+
 volumes:
     redis-data:
     postgres-data:
