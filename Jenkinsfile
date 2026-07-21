@@ -2,6 +2,13 @@ pipeline {
     agent any
 
     environment {
+        PORT = '3050'
+        REDIS_PASSWORD = 'redis123'
+        REDIS_PORT = '6379'
+        P_DB_NAME = 'mydatabase'
+        P_DB_USER = 'postgres'
+        P_DB_PASSWORD = 'postgres123'
+        P_DB_PORT = '5432'
         DOCKER_IMAGE = 'p25-geo-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
     }
