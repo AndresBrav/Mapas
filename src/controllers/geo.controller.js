@@ -31,7 +31,6 @@ export async function geocodeController(req, res) {
         responseBody = response;
         return res.status(statusHttp).json(responseBody);
     } finally {
-        logger.info({ "[RESPONSE BODY]": responseBody });
         logger.endTimer("GeocodeExecutionTime");
     }
 }
@@ -76,7 +75,6 @@ export async function routeController(req, res) {
         responseBody = response;
         return res.status(statusHttp).json(responseBody);
     } finally {
-        logger.info({ "[RESPONSE BODY]": responseBody });
         logger.endTimer("RouteExecutionTime");
     }
 }
@@ -117,7 +115,6 @@ export async function distanceController(req, res) {
         responseBody = response;
         return res.status(statusHttp).json(responseBody);
     } finally {
-        logger.info({ "[RESPONSE BODY]": responseBody });
         logger.endTimer("DistanceExecutionTime");
     }
 }

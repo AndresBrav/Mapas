@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { describe, it, expect, vi } from 'vitest';
 
 const { mockApp } = vi.hoisted(() => ({
-  mockApp: { use: vi.fn(), disable: vi.fn(), listen: vi.fn() }
+  mockApp: { use: vi.fn(), disable: vi.fn(), listen: vi.fn(), get: vi.fn() }
 }));
 
 vi.mock('ultimate-express', () => ({ default: vi.fn(() => mockApp) }));
@@ -14,7 +14,7 @@ vi.mock('helmet', () => {
   return { default: helmetMock };
 });
 vi.mock('body-parser', () => ({ default: { json: vi.fn(() => 'jsonMiddleware') } }));
-vi.mock('@tigo/logger', () => ({ httpLoggerMiddleware: vi.fn(() => 'httpLoggerMiddleware') }));
+vi.mock('../../src/middleware/requestLogger.middleware.js', () => ({ requestLoggerMiddleware: 'requestLoggerMiddleware' }));
 vi.mock('@tigo/redis-connector', () => ({ initializeRedis: vi.fn() }));
 vi.mock('../../src/routes/router.routes.js', () => ({ default: 'routerRoutes' }));
 vi.mock('../../src/routes/swagger.routes.js', () => ({ default: 'swaggerRouter' }));
@@ -42,6 +42,19 @@ describe('app.js', () => {
     wellKnownHandler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(204);
+  });
+
+  it('should redirect GET / to /api-docs', () => {
+    const getCalls = mockApp.get.mock.calls;
+    const rootRoute = getCalls.find(call => call[0] === '/');
+
+    expect(rootRoute).toBeDefined();
+
+    const req = {};
+    const res = { redirect: vi.fn() };
+
+    rootRoute[1](req, res);
+    expect(res.redirect).toHaveBeenCalledWith('/api-docs');
   });
 
   it('should set Cache-Control and Pragma headers via middleware', () => {

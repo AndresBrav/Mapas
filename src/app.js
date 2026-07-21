@@ -4,9 +4,9 @@ import helmet from 'helmet';
 import routerRoutes from './routes/router.routes.js';
 import swaggerRouter from './routes/swagger.routes.js';
 import bodyParser from 'body-parser';
-import { httpLoggerMiddleware } from '@tigo/logger';
 import { initializeRedis } from '@tigo/redis-connector';
 import config from './utils/config.js';
+import { requestLoggerMiddleware } from './middleware/requestLogger.middleware.js';
 const app = ultimateExpress();
 
 // Chrome DevTools discovery (evitar bloqueo CSP en localhost)
@@ -22,7 +22,7 @@ const metricsMiddleware = promBundle({ includeMethod: true });
 app.disable('x-powered-by');
 app.use(bodyParser.json());
 
-app.use(httpLoggerMiddleware());
+app.use(requestLoggerMiddleware);
 app.use(metricsMiddleware);
 
 app.use(helmet.noSniff());
@@ -47,6 +47,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", (req, res) => res.redirect("/api-docs"));
 app.use(config.API_BASE_PATH, routerRoutes);
 
 export default app;
