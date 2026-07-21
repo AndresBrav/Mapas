@@ -18,7 +18,7 @@ pipeline {
                 nodejs 'NodeJS-22'
             }
             steps {
-                sh 'npm ci'
+                sh 'npm install'
                 sh 'npm run test'
             }
         }
