@@ -73,6 +73,7 @@ pipeline {
 
         stage('Deploy to Dev') {
             steps {
+                sh 'docker compose -f docker-compose.yml down || true'
                 sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
                 sh 'docker compose -f docker-compose.yml up -d app'
                 sh 'docker compose -f docker-compose.yml run --rm app node scripts/seed-clients.js'
