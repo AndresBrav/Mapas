@@ -6,7 +6,7 @@ ENV NODE_ENV=production
 
 WORKDIR $APP_HOME
 
-RUN apt-get update && apt-get upgrade -y \
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

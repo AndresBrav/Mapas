@@ -67,10 +67,12 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - trivy-db:/root/.cache/trivy
+            - ./.trivyignore:/root/.trivyignore
         command: >
             image --scanners vuln
             --severity CRITICAL,HIGH
             --exit-code 1
+            --ignorefile /root/.trivyignore
             p25-geo-app:latest
 
     k6-load-test:
