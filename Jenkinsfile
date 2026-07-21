@@ -16,11 +16,12 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                sh 'git config --global http.postBuffer 524288000'
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/main']],
+                    branches: scm.branches,
                     extensions: [[$class: 'CloneOption', depth: 1, shallow: true]],
-                    userRemoteConfigs: [[url: 'https://gitlab.com/AndresBrav/project.git']]
+                    userRemoteConfigs: scm.userRemoteConfigs
                 ])
             }
         }
