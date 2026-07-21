@@ -83,6 +83,15 @@ pipeline {
             steps {
                 sh 'docker compose -f docker-compose.yml down || true'
                 sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
+                sh '''cat > .env << EOF
+PORT=${PORT}
+REDIS_PASSWORD=${REDIS_PASSWORD}
+REDIS_PORT=${REDIS_PORT}
+P_DB_NAME=${P_DB_NAME}
+P_DB_USER=${P_DB_USER}
+P_DB_PASSWORD=${P_DB_PASSWORD}
+P_DB_PORT=${P_DB_PORT}
+EOF'''
                 sh 'docker compose -f docker-compose.yml up -d app'
                 sh 'docker compose -f docker-compose.yml run --rm app node scripts/seed-clients.js'
             }
