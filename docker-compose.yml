@@ -103,18 +103,20 @@ services:
             -l FAIL
             -I
             -S
-            -z "-config replacer.full_list(0).description=auth1
+            -z "-config autoupdate.checkonstart=false
+                -config autoupdate.downloadnewrelease=false
+                -config replacer.full_list(0).description=auth1
                 -config replacer.full_list(0).enabled=true
                 -config replacer.full_list(0).matchtype=REQ_HEADER
                 -config replacer.full_list(0).matchstr=x-clientid
                 -config replacer.full_list(0).replacement=envio-app
-                -config replacer.full_list(0).initiators=*
+                -config replacer.full_list(0).initiators=3
                 -config replacer.full_list(1).description=auth2
                 -config replacer.full_list(1).enabled=true
                 -config replacer.full_list(1).matchtype=REQ_HEADER
                 -config replacer.full_list(1).matchstr=x-client-secret
                 -config replacer.full_list(1).replacement=123456789ABC
-                -config replacer.full_list(1).initiators=*"
+                -config replacer.full_list(1).initiators=3"
         volumes:
             - ./docs/openapi.yaml:/zap/openapi.yaml:ro
             - ./docs/evidencias:/zap/wrk
