@@ -97,7 +97,7 @@ services:
             - ZAP_JVM_OPTS=-Xmx512m
         command: >
             zap-api-scan.py
-            -t /zap/openapi.yaml
+            -t http://app:3050/api-docs/swagger.json
             -f openapi
             -O http://app:3050/v1
             -r zap-report.html
@@ -121,7 +121,6 @@ services:
                 -config replacer.full_list(1).replacement=123456789ABC
                 -config replacer.full_list(1).initiators=3"
         volumes:
-            - ./docs/openapi.yaml:/zap/openapi.yaml:ro
             - ./docs/evidencias:/zap/wrk
         networks:
             - zap-net
