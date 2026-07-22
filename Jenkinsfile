@@ -114,6 +114,7 @@ EOF'''
 
         stage('Performance - K6') {
             steps {
+                sh 'docker compose -f docker-compose.yml -f docker-compose.k6.yml up -d app mock-maps'
                 sh 'docker compose --profile k6 run k6-load-test'
             }
         }

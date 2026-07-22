@@ -82,6 +82,7 @@ services:
         container_name: k6-load-test
         volumes:
             - ./test/k6:/scripts
+            - ./7_Pruebas_carga_K6:/reports
         network_mode: "host"
         command: run /scripts/load_test.js
 
