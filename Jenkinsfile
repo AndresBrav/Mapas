@@ -105,8 +105,8 @@ EOF'''
                 always {
                     publishHTML(target: [
                         reportName: 'ZAP DAST Report',
-                        reportDir: 'docs/evidencias',
-                        reportFiles: 'zap-report.html'
+                        reportDir: '5_Seguridad_DAST',
+                        reportFiles: '5.1_Reporte_DAST_AppScan.html'
                     ])
                 }
             }

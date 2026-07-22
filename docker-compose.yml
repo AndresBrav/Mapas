@@ -99,9 +99,9 @@ services:
             -t http://app:3050/api-docs/swagger.json
             -f openapi
             -O http://app:3050/v1
-            -r zap-report.html
-            -J zap-report.json
-            -w zap-report.md
+            -r 5.1_Reporte_DAST_AppScan.html
+            -J 5.1_Reporte_DAST_AppScan.json
+            -w 5.1_Reporte_DAST_AppScan.md
             -l FAIL
             -I
             -S
@@ -120,7 +120,7 @@ services:
                 -config replacer.full_list(1).replacement=123456789ABC
                 -config replacer.full_list(1).initiators=3"
         volumes:
-            - ./docs/evidencias:/zap/wrk
+            - ./5_Seguridad_DAST:/zap/wrk
         networks:
             - zap-net
 
