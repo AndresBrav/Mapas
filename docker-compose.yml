@@ -36,6 +36,7 @@ services:
 
     app:
         build: .
+        image: p25-geo-app
         container_name: p25-geo-app
         ports:
             - "${PORT}:${PORT}"
@@ -66,11 +67,13 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - trivy-db:/root/.cache/trivy
+            - ./6_Escaneo_contenedor_Trivy:/reports
         command: >
             image --scanners vuln
             --severity CRITICAL,HIGH
             --exit-code 1
             --ignore-unfixed
+            --output /reports/6.1_Salida_Trivy.txt
             p25-geo-app:latest
 
     k6-load-test:
