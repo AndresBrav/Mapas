@@ -6,6 +6,7 @@ import { Punto } from "../domain/Punto.js";
 import { Ruta } from "../domain/Ruta.js";
 import config from "../utils/config.js";
 import { cacheAside } from "../utils/cache-aside.js";
+import { setError } from "../utils/errorCodes.js";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -64,12 +65,10 @@ export class GeoService {
                 const data = response.data;
 
                 if (!data || data.length === 0) {
-                    const error = new Error(`Address not found: ${address}`);
-                    error.statusCode = 404;
                     logger.warn({
                         "GeoService.geocodificar": { notFound: address },
                     });
-                    throw error;
+                    throw setError(`Address not found: ${address}`, "NF001");
                 }
 
                 return {
@@ -95,11 +94,10 @@ export class GeoService {
         const data = response.data;
 
         if (data?.code !== "Ok" || !data?.routes?.length) {
-            const error = new Error(
+            throw setError(
                 `Route not found between (${originLat},${originLng}) and (${destLat},${destLng})`,
+                "NF001",
             );
-            error.statusCode = 404;
-            throw error;
         }
 
         return data.routes[0];

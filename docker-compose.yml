@@ -43,15 +43,11 @@ services:
         environment:
             - REDIS_HOST=redis
             - P_DB_HOST=postgres
-            - NOMINATIM_BASE_URL=http://mock-maps:4000/search
-            - OSRM_BASE_URL=http://mock-maps:4000/route/v1/driving
         depends_on:
             redis:
                 condition: service_healthy
             postgres:
                 condition: service_healthy
-            mock-maps:
-                condition: service_started
         restart: unless-stopped
         networks:
             - default
