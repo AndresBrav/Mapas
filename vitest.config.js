@@ -5,7 +5,7 @@ export default defineConfig({
     timeout: 10000, // en milisegundos (10s),
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'html'],
       exclude: [
         'index.js',
         'src/**/*.routes.js',

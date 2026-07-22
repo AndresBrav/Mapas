@@ -10,7 +10,9 @@
         "dev": "node --watch index.js",
         "coverage": "vitest run --coverage test/unit-test/",
         "seed": "node scripts/seed-clients.js",
-        "sonar": "sonar"
+        "sonar": "sonar",
+        "lint": "eslint src/",
+        "lint:report": "eslint src/ --format html -o 2_Template_y_calidad_de_codigo/2.2_Reporte_linter.html"
     },
     "repository": {
         "type": "git",
@@ -38,8 +40,11 @@
         "zod": "^4.1.12"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@sonar/scan": "^4.4.0",
         "@vitest/coverage-v8": "^4.0.7",
+        "eslint": "^10.7.0",
+        "eslint-formatter-html": "^2.7.3",
         "node-mocks-http": "^1.17.2",
         "vitest": "^4.0.7"
     }
