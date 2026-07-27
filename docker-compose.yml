@@ -50,9 +50,6 @@ services:
             postgres:
                 condition: service_healthy
         restart: unless-stopped
-        networks:
-            - default
-            - zap-net
 
     mock-maps:
         build: ./test/mock-server
@@ -122,8 +119,6 @@ services:
                 -config replacer.full_list(1).initiators=3"
         volumes:
             - ./5_Seguridad_DAST:/zap/wrk
-        networks:
-            - zap-net
 
 volumes:
     redis-data:
@@ -133,5 +128,3 @@ volumes:
 
 networks:
     default:
-    zap-net:
-
