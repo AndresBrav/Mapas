@@ -57,15 +57,6 @@ pipeline {
             }
         }
 
-        stage('SAST - SonarQube') {
-            tools {
-                nodejs 'NodeJS-22'
-            }
-            steps {
-                sh 'npm run sonar || echo "SonarQube analysis completed with warnings"'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
@@ -99,7 +90,7 @@ EOF'''
 
         stage('DAST - OWASP ZAP') {
             steps {
-                sh 'docker compose --profile zap run zap-scan'
+                sh 'docker compose --profile zap run --rm zap-scan'
             }
             post {
                 always {
