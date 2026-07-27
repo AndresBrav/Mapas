@@ -16,4 +16,5 @@ export default {
     AUTH_CACHE_TTL: parseInt(process.env.AUTH_CACHE_TTL || "300", 10),
     RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10),
     RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
+    KAFKA_TOPIC: process.env.KAFKA_TOPIC || "example-topic",
 };

@@ -2,11 +2,13 @@ import { logger } from '@tigo/logger';
 import { errorCodes, setError } from '../utils/errorCodes.js';
 import { insertExample, selectExampleById } from '../repositories/example.repository.js';
 import { publish } from '@tigo/kafka-connector';
+import config from '../utils/config.js';
+
 /**
  * Logica de negocio del recurso `example`.
  */
 
-const topic = process.env.KAFKA_TOPIC || 'example-topic';
+const topic = config.KAFKA_TOPIC;
 
 export const createExampleService = async (body) => {
   logger.info({ 'createExampleService': { '[NAME]': body?.name } });

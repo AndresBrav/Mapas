@@ -72,8 +72,6 @@ pipeline {
 
         stage('Deploy to Dev') {
             steps {
-                sh 'docker compose -f docker-compose.yml down || true'
-                sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
                 sh '''cat > .env << EOF
 PORT=${PORT}
 REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -83,6 +81,8 @@ P_DB_USER=${P_DB_USER}
 P_DB_PASSWORD=${P_DB_PASSWORD}
 P_DB_PORT=${P_DB_PORT}
 EOF'''
+                sh 'docker compose -f docker-compose.yml down || true'
+                sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
                 sh 'docker compose -f docker-compose.yml up -d app'
                 sh 'docker compose -f docker-compose.yml run --rm app node scripts/seed-clients.js'
             }
@@ -106,7 +106,7 @@ EOF'''
         stage('Performance - K6') {
             steps {
                 sh 'docker compose -f docker-compose.yml -f docker-compose.k6.yml up -d app mock-maps'
-                sh 'docker compose --profile k6 run k6-load-test'
+                sh 'docker compose --profile k6 run --rm k6-load-test'
             }
         }
 
