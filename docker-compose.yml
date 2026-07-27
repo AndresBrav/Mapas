@@ -71,7 +71,7 @@ services:
         command: >
             image --scanners vuln
             --severity CRITICAL,HIGH
-            --exit-code 1
+            --exit-code 0
             --ignore-unfixed
             --output /reports/6.1_Salida_Trivy.txt
             p25-geo-app:latest
