@@ -89,7 +89,8 @@ services:
 
     k6-load-test:
         profiles: ["k6"]
-        image: grafana/k6:latest
+        build: ./test/k6
+        image: p25-k6-test
         container_name: k6-load-test
         user: root
         depends_on:
@@ -98,7 +99,6 @@ services:
             mock-maps:
                 condition: service_started
         volumes:
-            - ./test/k6:/scripts
             - ./7_Pruebas_carga_K6:/reports
         environment:
             - BASE_URL=http://host.docker.internal:3050/v1
