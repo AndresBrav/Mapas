@@ -92,11 +92,13 @@ services:
                 condition: service_started
         environment:
             - ZAP_JVM_OPTS=-Xmx512m
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         command: >
             zap-api-scan.py
-            -t http://app:3050/api-docs/swagger.json
+            -t http://host.docker.internal:3050/api-docs/swagger.json
             -f openapi
-            -O http://app:3050/v1
+            -O http://host.docker.internal:3050/v1
             -r 5.1_Reporte_DAST_AppScan.html
             -J 5.1_Reporte_DAST_AppScan.json
             -w 5.1_Reporte_DAST_AppScan.md
