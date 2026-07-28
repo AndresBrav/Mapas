@@ -49,6 +49,12 @@ services:
                 condition: service_healthy
             postgres:
                 condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "wget -qO- http://localhost:$${PORT}/v1/health || exit 1"]
+            interval: 10s
+            timeout: 5s
+            retries: 8
+            start_period: 20s
         restart: unless-stopped
 
     mock-maps:
@@ -89,7 +95,7 @@ services:
         container_name: zap-scan
         depends_on:
             app:
-                condition: service_started
+                condition: service_healthy
         environment:
             - ZAP_JVM_OPTS=-Xmx512m
         extra_hosts:

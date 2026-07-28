@@ -74,6 +74,7 @@ pipeline {
             steps {
                 sh '''cat > .env << EOF
 PORT=${PORT}
+API_BASE_PATH=/v1
 REDIS_PASSWORD=${REDIS_PASSWORD}
 REDIS_PORT=${REDIS_PORT}
 P_DB_NAME=${P_DB_NAME}
