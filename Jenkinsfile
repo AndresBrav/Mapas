@@ -86,6 +86,8 @@ KAFKA_PORT=9092
 KAFKA_CLIENT_ID=p25-geo-app
 KAFKA_GROUP_ID=p25-geo-group
 KAFKA_TOPIC=example-topic
+NOMINATIM_BASE_URL=http://mock-maps:4000/search
+OSRM_BASE_URL=http://mock-maps:4000/route/v1/driving
 EOF'''
                 sh 'docker compose -f docker-compose.yml down || true'
                 sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
