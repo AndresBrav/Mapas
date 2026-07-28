@@ -12,6 +12,11 @@ const swaggerDocument = yaml.load(
 
 const router = Router();
 
+router.get("/swagger.json", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(swaggerDocument);
+});
+
 router.use("/", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 export default router;

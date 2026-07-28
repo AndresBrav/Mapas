@@ -93,6 +93,7 @@ services:
         profiles: ["zap"]
         image: ghcr.io/zaproxy/zaproxy:stable
         container_name: zap-scan
+        user: root
         depends_on:
             app:
                 condition: service_healthy
