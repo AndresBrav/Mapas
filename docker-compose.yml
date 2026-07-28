@@ -70,7 +70,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - trivy-db:/root/.cache/trivy
-            - ./6_Escaneo_contenedor_Trivy:/reports
+            - ${PWD}/6_Escaneo_contenedor_Trivy:/reports
         command: >
             image --scanners vuln
             --severity CRITICAL,HIGH
@@ -84,8 +84,8 @@ services:
         image: grafana/k6:latest
         container_name: k6-load-test
         volumes:
-            - ./test/k6:/scripts
-            - ./7_Pruebas_carga_K6:/reports
+            - ${PWD}/test/k6:/scripts
+            - ${PWD}/7_Pruebas_carga_K6:/reports
         network_mode: "host"
         command: run /scripts/load_test.js
 
@@ -127,7 +127,7 @@ services:
                 -config replacer.full_list(1).replacement=123456789ABC
                 -config replacer.full_list(1).initiators=3"
         volumes:
-            - ./5_Seguridad_DAST:/zap/wrk
+            - ${PWD}/5_Seguridad_DAST:/zap/wrk
 
 volumes:
     redis-data:
