@@ -98,8 +98,8 @@ services:
             mock-maps:
                 condition: service_started
         volumes:
-            - ${PWD}/test/k6:/scripts
-            - ${PWD}/7_Pruebas_carga_K6:/reports
+            - ./test/k6:/scripts
+            - ./7_Pruebas_carga_K6:/reports
         environment:
             - BASE_URL=http://host.docker.internal:3050/v1
         extra_hosts:
