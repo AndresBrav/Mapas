@@ -81,6 +81,11 @@ P_DB_NAME=${P_DB_NAME}
 P_DB_USER=${P_DB_USER}
 P_DB_PASSWORD=${P_DB_PASSWORD}
 P_DB_PORT=${P_DB_PORT}
+KAFKA_HOST=localhost
+KAFKA_PORT=9092
+KAFKA_CLIENT_ID=p25-geo-app
+KAFKA_GROUP_ID=p25-geo-group
+KAFKA_TOPIC=example-topic
 EOF'''
                 sh 'docker compose -f docker-compose.yml down || true'
                 sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
@@ -124,8 +129,6 @@ EOF'''
         }
         success {
             echo "Pipeline completado exitosamente."
-        }
-        always {
             cleanWs()
         }
     }
