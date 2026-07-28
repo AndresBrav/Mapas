@@ -88,6 +88,8 @@ KAFKA_GROUP_ID=p25-geo-group
 KAFKA_TOPIC=example-topic
 NOMINATIM_BASE_URL=http://mock-maps:4000/search
 OSRM_BASE_URL=http://mock-maps:4000/route/v1/driving
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=10000
 EOF'''
                 sh 'docker compose -f docker-compose.yml down || true'
                 sh 'docker compose -f docker-compose.yml up -d postgres redis mock-maps'
